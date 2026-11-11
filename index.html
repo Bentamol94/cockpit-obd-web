@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
+<title>Cockpit OBD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;800&family=B612+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: app a finestre come un infotainment — barra di stato in alto, una finestra alla volta, schede in basso */
+:root{
+  --bg:#07090b; --dash:#0e1216; --bezel:#1b2128; --ink:#e9eef2; --dim:#6f7c86;
+  --needle:#ff4a1c; --glow:#ffb36b; --lcd:#9fe3ff; --ok:#3ddc84; --warn:#ffb020; --crit:#ff3b30;
+  --f-disp:"Saira Condensed","Arial Narrow",sans-serif; --f-data:"B612 Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-disp);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(76px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;
+  padding-block:10px;border-bottom:1px solid var(--bezel);margin-bottom:12px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.brand{font-weight:800;font-size:20px;letter-spacing:.22em}
+.brand span{font-weight:400;font-size:13px;letter-spacing:.12em;color:var(--dim);margin-left:6px}
+.topbar .status{flex:1;min-width:0;text-align:left}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions button{padding:8px 14px;font-size:14px}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.view{display:flex;flex-direction:column;gap:12px}
+.panel.screen{max-width:760px;width:100%;margin:0 auto;box-sizing:border-box}
+.panel b{color:var(--ink)}
+.note{margin:10px 0 0;max-width:70ch}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.lbl{font-size:12px;letter-spacing:.2em;color:var(--dim);font-family:var(--f-disp)}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-family:var(--f-data);font-size:15px;color:var(--lcd);border-top:1px solid #12313f;padding-top:10px}
+.mini span{color:var(--dim);font-family:var(--f-disp);letter-spacing:.12em;font-size:12px;display:block}
+.mini b{color:var(--lcd)}
+#logBox{white-space:pre-wrap;word-break:break-all;max-height:50vh;overflow:auto;background:#0b0f13;border:1px solid var(--bezel);border-radius:8px;padding:10px;color:var(--ink);font-size:12px;margin:12px 0 0}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);background:#0b0e11;border-top:1px solid var(--bezel);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--dim);text-decoration:none;
+  font-size:12px;letter-spacing:.1em;text-transform:uppercase;min-width:0}
+.tabs svg{width:24px;height:24px;fill:currentColor}
+.tabs a[aria-current="page"]{color:var(--ink);background:#151b21}
+.tabs a[aria-current="page"] svg{color:var(--needle)}
+.tabs a:focus-visible{outline:2px solid var(--glow);outline-offset:-2px}
+.tells{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;padding:6px 0}
+.tell{width:30px;height:30px;opacity:.14;transition:opacity .2s,filter .2s}
+.tell.on{opacity:1;filter:drop-shadow(0 0 6px currentColor)}
+.tell svg{width:100%;height:100%;fill:currentColor}
+.t-warn{color:var(--warn)} .t-crit{color:var(--crit)} .t-ok{color:var(--ok)} .t-info{color:var(--lcd)}
+.cluster{position:relative;background:radial-gradient(120% 90% at 50% 0%,#151b21 0%,var(--dash) 55%,#090c0f 100%);
+  border:1px solid var(--bezel);border-radius:28px 28px 44px 44px;padding:20px 16px 26px;
+  display:grid;grid-template-columns:1fr minmax(220px,300px) 1fr;gap:12px;align-items:center;
+  box-shadow:inset 0 2px 0 #ffffff0d,0 20px 60px #000a}
+.gauge{position:relative;width:100%;max-width:420px;aspect-ratio:1;justify-self:center}
+.gauge canvas{width:100%;height:100%;display:block}
+.gauge .read{position:absolute;left:0;right:0;bottom:22%;text-align:center;pointer-events:none}
+.read b{font-family:var(--f-data);font-size:clamp(26px,4.4vw,46px);font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.read span{display:block;font-size:13px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+.mfd{background:linear-gradient(#0a1a22,#06121a);border:2px solid #10232d;border-radius:14px;padding:14px;
+  box-shadow:inset 0 0 30px #00141f,0 0 0 4px #0b0f13;display:flex;flex-direction:column;gap:12px;min-width:0}
+.gear{display:flex;justify-content:space-between;align-items:baseline;color:var(--lcd);font-family:var(--f-data)}
+.gear .g{font-size:54px;font-weight:700;line-height:1;text-shadow:0 0 12px #3cc9ff80}
+.gear .clock{font-size:18px}
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:44px 1fr 66px;align-items:center;gap:8px;font-size:13px;letter-spacing:.12em;color:var(--dim)}
+.bar .track{height:10px;background:#0f2a36;border-radius:2px;overflow:hidden;display:flex;gap:2px}
+.bar .seg{flex:1;background:#123544}
+.bar .seg.on{background:var(--lcd);box-shadow:0 0 6px #3cc9ff}
+.bar .seg.on.hot{background:var(--crit);box-shadow:0 0 6px var(--crit)}
+.bar .seg.on.low{background:var(--warn);box-shadow:0 0 6px var(--warn)}
+.bar em{font-style:normal;font-family:var(--f-data);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.trip{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:14px;font-family:var(--f-data);font-size:15px;color:var(--lcd);border-top:1px solid #12313f;padding-top:10px}
+.trip span{color:var(--dim);font-family:var(--f-disp);letter-spacing:.12em;font-size:12px;display:block}
+.cons{display:grid;gap:8px;color:var(--lcd);font-family:var(--f-data)}
+.cons span{color:var(--dim);font-family:var(--f-disp);letter-spacing:.12em;font-size:12px;display:block}
+.cons-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.cons-main span{flex-basis:100%}
+.cons-main b{font-size:64px;line-height:1;text-shadow:0 0 12px #3cc9ff80;font-variant-numeric:tabular-nums}
+.cons-main small{font-size:14px;color:var(--dim)}
+.cons .track{height:8px;background:#0f2a36;border-radius:2px;overflow:hidden;display:flex;gap:2px}
+.cons .seg{flex:1;background:#123544}
+.cons .seg.on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.cons .seg.on.low{background:var(--warn);box-shadow:0 0 6px var(--warn)}
+.cons-sub{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 12px;font-size:16px}
+.cons-src{font-size:11px;color:var(--dim)}
+.setup{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end}
+.setup label{display:grid;gap:4px;font-family:var(--f-disp);letter-spacing:.12em;font-size:12px;text-transform:uppercase;color:var(--dim)}
+.setup select,.setup input{font-family:var(--f-data);font-size:15px;color:var(--ink);background:#0b0f13;border:1px solid #2a333c;border-radius:8px;padding:8px 10px;width:150px;box-sizing:border-box}
+.setup select:focus-visible,.setup input:focus-visible{outline:2px solid var(--glow);outline-offset:1px}
+.tyres{display:grid;grid-template-columns:1fr 70px 1fr;grid-template-rows:auto auto;gap:10px 14px;align-items:center;max-width:420px;margin:0 auto;width:100%}
+.tyre{font-family:var(--f-data);text-align:center;padding:8px 6px;border:1px solid var(--bezel);border-radius:10px;background:#0b0f13}
+.tyre b{display:block;font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+.tyre small{color:var(--dim);font-size:11px;letter-spacing:.1em}
+.tyre.low{border-color:var(--warn)} .tyre.low b{color:var(--warn)}
+.tyre.crit{border-color:var(--crit)} .tyre.crit b{color:var(--crit)}
+.carbody{grid-column:2;grid-row:1/3;height:150px;border:2px solid #2a333c;border-radius:30px 30px 22px 22px;position:relative}
+.carbody::before{content:"";position:absolute;inset:26px 8px auto;height:30px;border:1px solid #2a333c;border-radius:10px 10px 4px 4px}
+.tyre-note{text-align:center;margin-top:8px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+button{font-family:var(--f-disp);font-weight:600;font-size:16px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink);background:#151b21;border:1px solid #2a333c;border-radius:999px;padding:10px 20px;cursor:pointer}
+button:hover{border-color:var(--glow)}
+button:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+button.primary{background:var(--needle);border-color:var(--needle);color:#fff}
+button[disabled]{opacity:.4;cursor:not-allowed}
+.status{font-family:var(--f-data);font-size:13px;color:var(--dim);min-height:1.4em}
+.status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim);margin-right:6px;vertical-align:middle}
+.status.live .dot{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.status.demo .dot{background:var(--warn)}
+.panel{background:var(--dash);border:1px solid var(--bezel);border-radius:14px;padding:14px 16px;font-family:var(--f-data);font-size:13px;color:var(--dim);line-height:1.6}
+.panel h2{font-family:var(--f-disp);font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin:0 0 6px}
+.dtc{color:var(--ink)} .dtc li{margin:2px 0}
+details summary{cursor:pointer;font-family:var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);font-size:15px}
+details p{max-width:70ch}
+@media (max-width:820px){
+  .cluster{grid-template-columns:1fr 1fr;border-radius:24px}
+  .mfd{grid-column:1/-1;order:3}
+}
+@media (max-width:460px){ .cluster{grid-template-columns:1fr} .tabs a{font-size:10px;letter-spacing:.04em} .brand span{display:none} }
+/* telefono in orizzontale sul cruscotto: strumenti affiancati e niente spazio sprecato */
+@media (orientation:landscape) and (max-height:500px){
+  .topbar{padding-block:6px;margin-bottom:6px} .tells{padding:0} .tell{width:22px;height:22px}
+  .cluster{grid-template-columns:1fr minmax(180px,240px) 1fr;padding:10px;border-radius:22px}
+  .mfd{grid-column:auto;order:0;padding:10px;gap:8px} .gear .g{font-size:40px}
+  .gauge{max-width:min(420px,calc(100vh - 170px))}
+}
+@media (prefers-reduced-motion:reduce){ .tell{transition:none} }
+</style>
+</head>
+<body>
+
+
+<header class="topbar">
+  <div class="brand">COCKPIT <span>cee'd 1.6 CRDi</span></div>
+  <div class="status" id="status"><span class="dot"></span>Pronto. Premi Demo o Collega OBD.</div>
+  <div class="actions">
+    <button class="primary" id="btnConnect">Collega OBD</button>
+    <button id="btnDemo">Demo</button>
+    <button id="btnStop" disabled>Stop</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ===== COCKPIT ===== -->
+  <section class="view" id="v-cockpit" aria-label="Cockpit">
+    <div class="tells" aria-label="Spie">
+      <div class="tell t-crit" id="tCoolant" title="Temperatura liquido alta"><svg viewBox="0 0 24 24"><path d="M11 2h2v9.2a4 4 0 1 1-2 0V9h-3V7h3V5h-3V3h3zM3 19c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1zm12 0c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1z"/></svg></div>
+      <div class="tell t-warn" id="tEngine" title="Spia motore (codici errore)"><svg viewBox="0 0 24 24"><path d="M7 5h6v2h-2v2h4l2 2h2v-2h2v8h-2v-2h-2l-2 3H9l-2-2H5v2H3V9h2v2h2V9h2V7H7z"/></svg></div>
+      <div class="tell t-warn" id="tFuel" title="Riserva carburante"><svg viewBox="0 0 24 24"><path d="M4 3h9v8h1a2 2 0 0 1 2 2v4a1 1 0 0 0 2 0V9l-2-2 1.4-1.4L20 8.2V17a3 3 0 0 1-6 0v-4h-1v8H4zm2 2v5h5V5z"/></svg></div>
+      <div class="tell t-warn" id="tTyre" title="Pressione gomme bassa"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 7 14.7l-1.5-1.3A7 7 0 1 0 6.5 16.4L5 17.7A9 9 0 0 1 12 3zm-1 4h2v6h-2zm0 8h2v2h-2zM4 20h16v2H4z"/></svg></div>
+      <div class="tell t-crit" id="tBatt" title="Tensione batteria anomala"><svg viewBox="0 0 24 24"><path d="M6 5h3v2h6V5h3v2h3v12H3V7h3zm-1 4v8h14V9zm1 3h4v2H6zm8 0h1.5v-1.5h1V12H18v2h-1.5v1.5h-1V14H14z"/></svg></div>
+      <div class="tell t-ok" id="tLink" title="Collegamento OBD attivo"><svg viewBox="0 0 24 24"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.5-3.5a3 3 0 0 1 4.2 4.2l-2 2-1.4-1.4 2-2a1 1 0 0 0-1.4-1.4l-3.5 3.5a1 1 0 0 1-1.4 0zm2.8-2.8a1 1 0 0 1 0 1.4l-3.5 3.5a3 3 0 0 1-4.2-4.2l2-2 1.4 1.4-2 2a1 1 0 0 0 1.4 1.4l3.5-3.5a1 1 0 0 1 1.4 0z"/></svg></div>
+    </div>
+
+    <div class="cluster" aria-label="Quadro strumenti">
+      <div class="gauge"><canvas id="rpm" aria-label="Contagiri"></canvas>
+        <div class="read"><b id="rpmVal">0</b><span>giri/min</span></div></div>
+
+      <div class="mfd" aria-live="off">
+        <div class="gear"><div><div class="lbl">MARCIA</div><div class="g" id="gear">N</div></div><div class="clock" id="clock">--:--</div></div>
+        <div class="bars">
+          <div class="bar"><span>H₂O</span><div class="track" id="bCool"></div><em id="vCool">-- °C</em></div>
+          <div class="bar"><span>FUEL</span><div class="track" id="bFuel"></div><em id="vFuel">-- %</em></div>
+          <div class="bar"><span>LOAD</span><div class="track" id="bLoad"></div><em id="vLoad">-- %</em></div>
+          <div class="bar"><span>TPS</span><div class="track" id="bTps"></div><em id="vTps">-- %</em></div>
+        </div>
+        <div class="mini">
+          <div><span>KM/L ORA</span><b id="vInstMini">--.-</b></div>
+          <div><span>AUTONOMIA</span><b id="vRangeMini">--- km</b></div>
+        </div>
+      </div>
+
+      <div class="gauge"><canvas id="spd" aria-label="Tachimetro"></canvas>
+        <div class="read"><b id="spdVal">0</b><span>km/h</span></div></div>
+    </div>
+  </section>
+
+  <!-- ===== CONSUMI ===== -->
+  <section class="view" id="v-consumi" aria-label="Consumi" hidden>
+    <div class="panel screen">
+      <div class="cons">
+        <div class="cons-main"><span>CONSUMO ISTANTANEO</span><b id="vInst">--.-</b><small>km/l</small></div>
+        <div class="track" id="bInst"></div>
+        <div class="cons-sub">
+          <div><span>MEDIA VIAGGIO</span><b id="vAvg">--.- km/l</b></div>
+          <div><span>CONSUMATI</span><b id="vLit">0.00 l</b></div>
+          <div><span>ORARIO</span><b id="vLh">0.0 l/h</b></div>
+          <div><span>AUTONOMIA</span><b id="vRange">--- km</b></div>
+        </div>
+        <div class="cons-src" id="vSrc">fonte: --</div>
+      </div>
+      <div class="trip">
+        <div><span>PERCORSO</span><b id="vTrip">0.00 km</b></div>
+        <div><span>V. MAX</span><b id="vMax">0 km/h</b></div>
+        <div><span>BATTERIA</span><b id="vBatt">-- V</b></div>
+        <div><span>ARIA ASPIR.</span><b id="vIat">-- °C</b></div>
+      </div>
+      <div class="row"><button id="btnReset" type="button">Azzera viaggio</button></div>
+    </div>
+  </section>
+
+  <!-- ===== GOMME ===== -->
+  <section class="view" id="v-gomme" aria-label="Gomme" hidden>
+    <div class="panel screen">
+      <h2>Pressione gomme</h2>
+      <div class="tyres">
+        <div class="tyre" id="tyFL"><small>ANT. SX</small><b>--</b><small>bar</small></div>
+        <div class="carbody" aria-hidden="true"></div>
+        <div class="tyre" id="tyFR"><small>ANT. DX</small><b>--</b><small>bar</small></div>
+        <div class="tyre" id="tyRL"><small>POST. SX</small><b>--</b><small>bar</small></div>
+        <div class="tyre" id="tyRR"><small>POST. DX</small><b>--</b><small>bar</small></div>
+      </div>
+      <div class="tyre-note" id="tyNote">In attesa del collegamento</div>
+      <p class="note">Riferimento cee'd con 205/55 R16: circa 2,3 bar a freddo. Giallo sotto 2,0 bar, rosso sotto 1,7.</p>
+    </div>
+  </section>
+
+  <!-- ===== DIAGNOSI ===== -->
+  <section class="view" id="v-diagnosi" aria-label="Diagnosi" hidden>
+    <div class="panel screen" id="dtcPanel">
+      <h2>Codici errore</h2>
+      <ul class="dtc" id="dtcList"><li>Collega l'adattatore e premi Leggi errori.</li></ul>
+      <div class="row">
+        <button id="btnDtc" disabled>Leggi errori</button>
+        <button id="btnClear" disabled>Cancella errori</button>
+      </div>
+      <p class="note">"Cancella errori" spegne la spia motore: usalo solo dopo aver risolto il guasto.</p>
+    </div>
+    <div class="panel screen" id="logPanel">
+      <h2>Registro collegamento</h2>
+      <p class="note">Comandi inviati all'adattatore e risposte ricevute. Se qualcosa non funziona, copialo e incollalo nella chat.</p>
+      <div class="row"><button id="btnCopyLog" type="button">Copia registro</button></div>
+      <pre id="logBox">Nessun evento ancora.</pre>
+    </div>
+  </section>
+
+  <!-- ===== IMPOSTAZIONI ===== -->
+  <section class="view" id="v-impostazioni" aria-label="Impostazioni" hidden>
+    <div class="panel screen">
+      <h2>Kia cee'd 1.6 CRDi 110 CV · 2016</h2>
+      <div class="setup">
+        <label for="selFuel">Alimentazione
+          <select id="selFuel"><option value="benzina">Benzina</option><option value="diesel">Diesel</option><option value="gpl">GPL</option></select></label>
+        <label for="inDisp">Cilindrata (cc)
+          <input id="inDisp" type="number" inputmode="numeric" min="600" max="7000" step="1" value="1582"></label>
+        <label for="inCorr">Correzione consumo (%)
+          <input id="inCorr" type="number" inputmode="numeric" min="-40" max="40" step="1" value="0"></label>
+      </div>
+      <p class="note">Già impostati: diesel 1582 cc, cambio manuale 6 marce con gomme 205/55 R16, serbatoio 53 l, zona rossa a 4500 giri. Omologazione: 4,1 l/100 km (24,4 km/l) nel ciclo misto.</p>
+      <p class="note">Per affinare la media: fai il pieno, premi Azzera viaggio, guida, e al pieno successivo confronta i km/l dell'app con km percorsi ÷ litri messi. Se l'app segna 22 km/l e dal pieno ne risultano 19, metti +16.</p>
+    </div>
+    <div class="panel screen">
+      <h2>Come collegarla all'auto</h2>
+      <p class="note">Serve un adattatore OBD-II ELM327 <b>Bluetooth LE</b> (es. Vgate iCar Pro BLE, vLinker MC+/FS BLE, Veepeak BLE). I modelli Bluetooth "classico" e Wi-Fi non sono supportati.</p>
+      <p class="note">1. Inserisci l'adattatore nella presa OBD sotto il volante e accendi il quadro.<br>
+         2. Apri questa pagina in Chrome su Android o su computer (Safari e iPhone non supportano il Bluetooth web).<br>
+         3. Premi Collega OBD e scegli l'adattatore dall'elenco. Non va abbinato prima dalle impostazioni del telefono.</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Finestre">
+  <a href="#cockpit" data-view="cockpit"><svg viewBox="0 0 24 24"><path d="M12 4a10 10 0 0 1 10 10v4H2v-4A10 10 0 0 1 12 4zm0 2a8 8 0 0 0-8 8v2h16v-2a8 8 0 0 0-8-8zm4.2 3.4 1.4 1.4-4.2 4.2a2 2 0 1 1-1.4-1.4z"/></svg>Cockpit</a>
+  <a href="#consumi" data-view="consumi"><svg viewBox="0 0 24 24"><path d="M4 3h9v8h1a2 2 0 0 1 2 2v4a1 1 0 0 0 2 0V9l-2-2 1.4-1.4L20 8.2V17a3 3 0 0 1-6 0v-4h-1v8H4zm2 2v5h5V5z"/></svg>Consumi</a>
+  <a href="#gomme" data-view="gomme"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>Gomme</a>
+  <a href="#diagnosi" data-view="diagnosi"><svg viewBox="0 0 24 24"><path d="M7 5h6v2h-2v2h4l2 2h2v-2h2v8h-2v-2h-2l-2 3H9l-2-2H5v2H3V9h2v2h2V9h2V7H7z"/></svg>Diagnosi</a>
+  <a href="#impostazioni" data-view="impostazioni"><svg viewBox="0 0 24 24"><path d="M10.3 2h3.4l.5 2.6 1.9.8 2.2-1.5 2.4 2.4-1.5 2.2.8 1.9 2.6.5v3.4l-2.6.5-.8 1.9 1.5 2.2-2.4 2.4-2.2-1.5-1.9.8-.5 2.6h-3.4l-.5-2.6-1.9-.8-2.2 1.5-2.4-2.4 1.5-2.2-.8-1.9L2 13.7v-3.4l2.6-.5.8-1.9-1.5-2.2 2.4-2.4 2.2 1.5 1.9-.8zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>Impostazioni</a>
+</nav>
+
+<script>
+// ---------- Strumenti analogici ----------
+const DPR = Math.min(window.devicePixelRatio||1, 2);
+function makeGauge(canvas, opt){
+  const g = {canvas, ctx:canvas.getContext('2d'), opt, val:0, shown:0};
+  g.resize = ()=>{ const r=canvas.getBoundingClientRect(); canvas.width=r.width*DPR; canvas.height=r.height*DPR; g.draw(); };
+  g.draw = ()=>{
+    const c=g.ctx, W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2*0.94;
+    const a0=Math.PI*0.75, a1=Math.PI*2.25, {max,major,minor,red,label,fmt}=opt;
+    const ang=v=>a0+(a1-a0)*Math.max(0,Math.min(1,v/max));
+    c.clearRect(0,0,W,H);
+    // corona
+    let grd=c.createRadialGradient(cx,cy,R*0.6,cx,cy,R);
+    grd.addColorStop(0,'#0b0f13'); grd.addColorStop(.92,'#0b0f13'); grd.addColorStop(.95,'#3a444e'); grd.addColorStop(1,'#11161b');
+    c.fillStyle=grd; c.beginPath(); c.arc(cx,cy,R,0,Math.PI*2); c.fill();
+    // zona rossa
+    if(red){ c.strokeStyle='#ff3b30'; c.lineWidth=R*0.05; c.beginPath(); c.arc(cx,cy,R*0.84,ang(red),a1); c.stroke(); }
+    // arco illuminato fino al valore
+    c.strokeStyle='rgba(255,140,60,.18)'; c.lineWidth=R*0.05; c.beginPath(); c.arc(cx,cy,R*0.84,a0,ang(g.shown)); c.stroke();
+    // tacche
+    for(let v=0; v<=max+1e-6; v+=minor){
+      const isMaj=Math.abs(v/major-Math.round(v/major))<1e-6, a=ang(v), r1=R*0.88, r2=R*(isMaj?0.76:0.81);
+      c.strokeStyle = red&&v>=red ? '#ff3b30' : (isMaj?'#e9eef2':'#6f7c86');
+      c.lineWidth=R*(isMaj?0.018:0.008);
+      c.beginPath(); c.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1); c.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2); c.stroke();
+      if(isMaj){ c.fillStyle=red&&v>=red?'#ff3b30':'#e9eef2'; c.font=`600 ${R*0.13}px "Saira Condensed",sans-serif`;
+        c.textAlign='center'; c.textBaseline='middle'; c.fillText(fmt(v),cx+Math.cos(a)*R*0.64,cy+Math.sin(a)*R*0.64); }
+    }
+    c.fillStyle='#6f7c86'; c.font=`400 ${R*0.08}px "Saira Condensed",sans-serif`; c.textAlign='center';
+    c.fillText(label,cx,cy-R*0.32);
+    // lancetta
+    const a=ang(g.shown);
+    c.save(); c.translate(cx,cy); c.rotate(a);
+    c.shadowColor='rgba(255,90,40,.8)'; c.shadowBlur=R*0.06;
+    c.fillStyle='#ff4a1c'; c.beginPath(); c.moveTo(-R*0.12,-R*0.018); c.lineTo(R*0.86,-R*0.005); c.lineTo(R*0.86,R*0.005); c.lineTo(-R*0.12,R*0.018); c.closePath(); c.fill();
+    c.restore();
+    c.fillStyle='#1b2128'; c.beginPath(); c.arc(cx,cy,R*0.07,0,Math.PI*2); c.fill();
+    c.strokeStyle='#3a444e'; c.lineWidth=R*0.012; c.stroke();
+  };
+  return g;
+}
+// Kia cee'd 1.6 CRDi 110 CV: diesel, limitatore attorno ai 4500 giri, velocità massima 182 km/h
+const gRpm = makeGauge(document.getElementById('rpm'),{max:6000,major:1000,minor:250,red:4500,label:'×1000 RPM',fmt:v=>v/1000});
+const gSpd = makeGauge(document.getElementById('spd'),{max:220,major:20,minor:10,red:0,label:'KM/H',fmt:v=>v});
+const gauges=[gRpm,gSpd];
+const ro=new ResizeObserver(()=>gauges.forEach(g=>g.resize())); gauges.forEach(g=>ro.observe(g.canvas));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function tick(){ gauges.forEach(g=>{ const d=g.val-g.shown; if(Math.abs(d)>0.01){ g.shown += reduce? d : d*0.18; g.draw(); } }); requestAnimationFrame(tick); }
+requestAnimationFrame(tick);
+
+// ---------- Display multifunzione ----------
+function segBar(el,n){ el.innerHTML=''; for(let i=0;i<n;i++){ const s=document.createElement('i'); s.className='seg'; el.appendChild(s);} }
+['bCool','bFuel','bLoad','bTps'].forEach(id=>segBar(document.getElementById(id),16));
+function setBar(id,frac,cls){ const segs=document.getElementById(id).children, on=Math.round(Math.max(0,Math.min(1,frac))*segs.length);
+  [...segs].forEach((s,i)=>{ s.className='seg'+(i<on?' on'+(cls?' '+cls:''):''); }); }
+const $=id=>document.getElementById(id);
+const state={rpm:0,speed:0,coolant:null,fuel:null,load:null,tps:null,batt:null,iat:null,trip:0,vmax:0,dtc:0};
+function render(){
+  gRpm.val=state.rpm; gSpd.val=state.speed;
+  $('rpmVal').textContent=Math.round(state.rpm);
+  $('spdVal').textContent=Math.round(state.speed);
+  if(state.coolant!=null){ $('vCool').textContent=Math.round(state.coolant)+' °C'; setBar('bCool',(state.coolant-40)/90,state.coolant>=110?'hot':''); }
+  if(state.fuel!=null){ $('vFuel').textContent=Math.round(state.fuel)+' %'; setBar('bFuel',state.fuel/100,state.fuel<12?'low':''); }
+  if(state.load!=null){ $('vLoad').textContent=Math.round(state.load)+' %'; setBar('bLoad',state.load/100); }
+  if(state.tps!=null){ $('vTps').textContent=Math.round(state.tps)+' %'; setBar('bTps',state.tps/100); }
+  if(state.batt!=null) $('vBatt').textContent=state.batt.toFixed(1)+' V';
+  if(state.iat!=null) $('vIat').textContent=Math.round(state.iat)+' °C';
+  $('vTrip').textContent=state.trip.toFixed(2)+' km';
+  $('vMax').textContent=Math.round(state.vmax)+' km/h';
+  $('gear').textContent=estimateGear();
+  $('tCoolant').classList.toggle('on',state.coolant!=null&&state.coolant>=110);
+  $('tFuel').classList.toggle('on',state.fuel!=null&&state.fuel<12);
+  $('tBatt').classList.toggle('on',state.batt!=null&&(state.batt<11.8||state.batt>15.2));
+  $('tEngine').classList.toggle('on',state.dtc>0);
+  renderTyres();
+}
+// ---------- Pressione gomme ----------
+// Kia cee'd 1.6 CRDi con 205/55 R16: pressione consigliata circa 2,3 bar a vettura scarica
+const TYRE_LOW=2.0, TYRE_CRIT=1.7, TYRE_IDS=['tyFL','tyFR','tyRL','tyRR'];
+state.tyres=[null,null,null,null]; state.tyreTemps=[null,null,null,null]; state.tyreNote='In attesa del collegamento';
+function renderTyres(){
+  let warn=false;
+  TYRE_IDS.forEach((id,i)=>{
+    const el=$(id), p=state.tyres[i], t=state.tyreTemps[i];
+    el.querySelector('b').textContent = p==null ? '--' : p.toFixed(2);
+    el.querySelectorAll('small')[1].textContent = p==null ? 'bar' : (t!=null ? 'bar · '+Math.round(t)+' °C' : 'bar');
+    el.classList.toggle('crit', p!=null && p<TYRE_CRIT);
+    el.classList.toggle('low', p!=null && p>=TYRE_CRIT && p<TYRE_LOW);
+    if(p!=null && p<TYRE_LOW) warn=true;
+  });
+  $('tyNote').textContent=state.tyreNote;
+  state.tyreWarn=warn;
+}
+// risposta UDS su più frame dell'ELM327 ("0:...", "1:...") → stringa esadecimale unica
+function mergeFrames(r){
+  return r.split(/[\r\n]+/).map(l=>l.trim()).filter(l=>l && !/^[0-9A-F]{3}$/i.test(l))
+    .map(l=>l.replace(/^[0-9A-F]:/i,'')).join('').replace(/[^0-9A-F]/gi,'').toUpperCase();
+}
+// Centralina TPMS Hyundai/Kia (indirizzo 7A0, richiesta 22 C00B): pressione in passi da 0,2 psi, temperatura −50 °C.
+// Risponde solo se l'auto ha i sensori dentro le ruote; con il sistema indiretto (ABS) il dato non esiste.
+let tyreTries=0, tyreSupported=null;
+async function readTyres(){
+  if(tyreSupported===false) return;
+  await cmd('ATSH7A0');
+  const r=await cmd('22C00B',3000);
+  await cmd('ATSH7DF');
+  const hex=mergeFrames(r), i=hex.indexOf('62C00B');
+  if(i<0){
+    tyreTries++;
+    if(tyreTries>=3){ tyreSupported=false; state.tyreNote='Questa auto non fornisce la pressione delle gomme via OBD (sistema TPMS indiretto o centralina non raggiungibile).'; }
+    else state.tyreNote='Cerco la centralina pressione gomme…';
+    return;
+  }
+  const b=k=>parseInt(hex.substr(i+k*2,2),16);
+  const PSI_TO_BAR=0.0689476;
+  [7,11,15,19].forEach((off,w)=>{
+    const p=b(off), t=b(off+1);
+    // FL, FR, RR, RL nell'ordine della centralina → riordino in FL, FR, RL, RR
+    const slot=[0,1,3,2][w];
+    state.tyres[slot] = isNaN(p)||p===0||p===255 ? null : p*0.2*PSI_TO_BAR;
+    state.tyreTemps[slot] = isNaN(t)||t===255 ? null : t-50;
+  });
+  tyreSupported=true;
+  state.tyreNote='Dati dai sensori nelle ruote · aggiornati '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+// Kia cee'd 1.6 CRDi 6 marce: rapporti 3.636 / 1.962 / 1.189 / 0.844 / 0.702 / 0.596, finale 3.615,
+// gomma 205/55 R16 (circonferenza di rotolamento ~1.95 m) → km/h ogni 1000 giri
+const RATIOS=[0,8.9,16.5,27.2,38.3,46.1,54.3];
+function estimateGear(){
+  if(state.speed<3) return state.rpm>500?'N':'P';
+  const k=state.speed/(state.rpm/1000||1); let best=1,bd=1e9;
+  for(let i=1;i<RATIOS.length;i++){ const d=Math.abs(RATIOS[i]-k); if(d<bd){bd=d;best=i;} }
+  return bd>6?'–':String(best);
+}
+setInterval(()=>{ const d=new Date(); $('clock').textContent=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); },1000);
+// ---------- Consumo ----------
+// rapporto stechiometrico aria/carburante e densità (g/l)
+const FUELS={benzina:{afr:14.7,dens:737},diesel:{afr:14.5,dens:832},gpl:{afr:15.5,dens:540}};
+const TANK=53; // litri, serbatoio cee'd 1.6 CRDi
+const cfg={fuel:'diesel',disp:1582,corr:0};
+try{ Object.assign(cfg,JSON.parse(localStorage.getItem('cockpit-cfg-ceed')||'{}')); }catch(e){}
+$('selFuel').value=cfg.fuel; $('inDisp').value=cfg.disp; $('inCorr').value=cfg.corr;
+function saveCfg(){
+  cfg.fuel=$('selFuel').value;
+  cfg.disp=Math.max(600,Math.min(7000,+$('inDisp').value||1400));
+  cfg.corr=Math.max(-40,Math.min(40,+$('inCorr').value||0));
+  try{ localStorage.setItem('cockpit-cfg-ceed',JSON.stringify(cfg)); }catch(e){}
+}
+['selFuel','inDisp','inCorr'].forEach(id=>$(id).addEventListener('change',saveCfg));
+segBar($('bInst'),20);
+
+// litri/ora: PID 5E se presente, altrimenti MAF, altrimenti stima da MAP + IAT + giri
+function fuelLh(){
+  const f=FUELS[cfg.fuel], k=1-cfg.corr/100;
+  // rilascio in marcia: iniezione tagliata
+  if(state.tps!=null && state.tps<2 && state.rpm>1300 && state.speed>15) return {lh:0,src:'taglio iniezione in rilascio'};
+  if(state.fuelRate!=null) return {lh:state.fuelRate*k,src:'PID 5E (portata carburante)'};
+  // Diesel: lavora in forte eccesso d'aria, quindi dall'aria aspirata non si ricava il gasolio.
+  // Si stima la quantità iniettata dal carico: ~2 mg/colpo al minimo, ~36 mg a pieno carico
+  // (taratura sui 81 kW e sui ~220 g/kWh di un 1.6 CRDi), 4 cilindri.
+  if(cfg.fuel==='diesel' && state.load!=null && state.rpm>300){
+    const mg = 2 + 34*Math.max(0,Math.min(1,state.load/100));
+    const gs = mg/1000 * state.rpm/120 * 4;
+    return {lh:gs/f.dens*3600*k, src:'carico motore (modello diesel 1.6 CRDi)'};
+  }
+  let maf=state.maf, src='sensore MAF';
+  if(maf==null && state.map!=null && state.rpm>0){
+    const iatK=(state.iat??25)+273.15;
+    maf = (state.rpm*state.map/iatK/120) * 0.85 * (cfg.disp/1000) * 28.97/8.314;
+    src='stima da pressione collettore';
+  }
+  if(maf==null) return {lh:null,src:'nessun dato aria/carburante'};
+  // sul diesel senza dato di carico si assume una miscela media magra (lambda ~1.8)
+  const lambda = cfg.fuel==='diesel' ? 1.8 : 1;
+  return {lh:maf/(f.afr*lambda)/f.dens*3600*k, src: cfg.fuel==='diesel' ? src+' (miscela diesel stimata)' : src};
+}
+state.litres=0; state.consKm=0;
+let instSmooth=null;
+let lastT=performance.now();
+setInterval(()=>{
+  const t=performance.now(), dt=t-lastT; lastT=t;
+  const km=state.speed*dt/3600000;
+  state.trip+=km; state.vmax=Math.max(state.vmax,state.speed);
+  const {lh,src}=fuelLh();
+  if(lh!=null){
+    state.litres+=lh*dt/3600000; state.consKm+=km;
+    let inst=null;
+    if(state.speed>3) inst = lh<0.05 ? 99.9 : Math.min(99.9,state.speed/lh);
+    instSmooth = inst==null ? null : (instSmooth==null ? inst : instSmooth+(inst-instSmooth)*0.15);
+    $('vLh').textContent=lh.toFixed(1)+' l/h';
+  }
+  $('vInst').textContent = instSmooth==null ? '--.-' : (instSmooth>=99.9?'99.9':instSmooth.toFixed(1));
+  const avg = state.litres>0.005 ? state.consKm/state.litres : null;
+  setBar('bInst', (instSmooth??0)/30, instSmooth!=null && avg!=null && instSmooth<avg*0.6 ? 'low':'');
+  $('vAvg').textContent = avg==null ? '--.- km/l' : Math.min(99.9,avg).toFixed(1)+' km/l';
+  $('vLit').textContent = state.litres.toFixed(2)+' l';
+  const autonomyKmL = avg!=null && state.consKm>2 ? avg : 20; // prima di 2 km usa una media reale tipica del 1.6 CRDi
+  $('vRange').textContent = state.fuel==null ? '--- km' : Math.round(state.fuel/100*TANK*autonomyKmL)+' km';
+  $('vSrc').textContent = 'fonte: '+src;
+  $('vInstMini').textContent = $('vInst').textContent;
+  $('vRangeMini').textContent = $('vRange').textContent;
+  $('tTyre').classList.toggle('on', !!state.tyreWarn);
+  render();
+  publishToCar(avg);
+},100);
+// dati per lo schermo di Android Auto (solo dentro l'app)
+let pubTick=0;
+function publishToCar(avg){
+  if(!window.AndroidBle || !window.AndroidBle.publish || (pubTick++%2)) return;
+  const mode = demoTimer ? 'demo' : (polling ? 'live' : 'off');
+  try{
+    window.AndroidBle.publish(JSON.stringify({
+      mode, rpm:state.rpm, speed:state.speed, gear:$('gear').textContent,
+      coolant:state.coolant, fuel:state.fuel, batt:state.batt,
+      inst:instSmooth, avg, range: state.fuel==null?null:Math.round(state.fuel/100*TANK*(avg!=null&&state.consKm>2?avg:20)),
+      trip:state.trip, dtc:state.dtc, tyres:state.tyres, tyreTemps:state.tyreTemps, tyreNote:state.tyreNote
+    }));
+  }catch(e){}
+}
+function resetTrip(){ state.trip=0; state.vmax=0; state.litres=0; state.consKm=0; instSmooth=null; }
+$('btnReset').onclick=resetTrip;
+
+function setStatus(text,mode){ const s=$('status'); s.className='status'+(mode?' '+mode:''); s.innerHTML='<span class="dot"></span>'+text; $('tLink').classList.toggle('on',mode==='live'); }
+function setRunning(on,live){ $('btnConnect').disabled=on; $('btnDemo').disabled=on; $('btnStop').disabled=!on; $('btnDtc').disabled=!live; $('btnClear').disabled=!live; }
+
+// ---------- Modalità demo ----------
+let demoTimer=null;
+function startDemo(){
+  setRunning(true,false); setStatus('Modalità demo: dati simulati','demo');
+  let t=0, gear=1, rpm=900, speed=0;
+  Object.assign(state,{coolant:45,fuel:63,load:20,tps:0,batt:14.1,iat:19,dtc:0,maf:null,map:null,fuelRate:null,tyreNote:'Valori simulati della modalità demo'}); resetTrip();
+  demoTimer=setInterval(()=>{
+    t+=0.1;
+    const phase=(t%40);
+    const accel = phase<14 ? 1 : phase<24 ? 0.25 : phase<32 ? -0.6 : -1.2;
+    state.tps = Math.max(0, accel>0 ? 25+accel*55+Math.sin(t*3)*5 : 0);
+    speed = Math.max(0, Math.min(170, speed + accel*1.6));
+    if(speed<2){ gear=1; rpm=850+Math.sin(t*5)*20; }
+    else {
+      rpm = speed/RATIOS[gear]*1000;
+      if(rpm>2900 && gear<6) gear++;
+      if(rpm<1200 && gear>1) gear--;
+      rpm = Math.max(900, speed/RATIOS[gear]*1000);
+    }
+    state.rpm=rpm; state.speed=speed;
+    state.load=Math.min(100, 15+state.tps*0.8+Math.random()*3);
+    state.coolant=Math.min(92, state.coolant+0.05);
+    state.fuel=Math.max(0, state.fuel-0.0015);
+    state.iat=19+speed*0.04;
+    state.batt=13.9+Math.sin(t)*0.15;
+    // aria aspirata simulata: densità aria × cilindrata × cicli × carico × rendimento volumetrico
+    state.maf=1.2*(cfg.disp/1000)*rpm/120*(state.load/100)*0.85;
+    // gomme simulate: si scaldano con la marcia, la posteriore destra è un po' sgonfia
+    const warm=Math.min(0.15,t*0.002);
+    state.tyres=[2.32+warm,2.30+warm,2.28+warm,1.94+warm];
+    state.tyreTemps=[18+warm*100,18+warm*100,17+warm*90,17+warm*90];
+  },100);
+}
+function stopDemo(){ clearInterval(demoTimer); demoTimer=null; }
+
+// ---------- ELM327 via Bluetooth LE ----------
+const SERVICES=['0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb',
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2','000018f0-0000-1000-8000-00805f9b34fb'];
+let dev=null, txChar=null, rxChar=null, rxBuf='', pending=null, polling=false;
+const enc=new TextEncoder(), dec=new TextDecoder();
+
+async function connect(){
+  if(!navigator.bluetooth){ setStatus('Bluetooth web non disponibile qui. Apri il file in Chrome su Android o computer.'); return; }
+  try{
+    setStatus('Scegli l\'adattatore OBD…');
+    dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:SERVICES});
+    dev.addEventListener('gattserverdisconnected',()=>{ log('Adattatore scollegato'); polling=false; setRunning(false,false); setStatus('Adattatore scollegato.'); });
+    setStatus('Connessione a '+(dev.name||'adattatore')+'…');
+    const server = await dev.gatt.connect();
+    log('Collegato via Bluetooth a '+(dev.name||'?'));
+    txChar=null; rxChar=null;
+    // Elenco dei canali: si scartano i servizi standard (nome, batteria, info dispositivo...)
+    // e si prova prima quelli tipici degli ELM327 BLE.
+    const SKIP=/^0000(1800|1801|180a|180f|1805)-/i;
+    const pairs=[];
+    for(const svc of await server.getPrimaryServices()){
+      const chars=await svc.getCharacteristics();
+      log('Servizio '+short(svc.uuid)+': '+chars.map(c=>short(c.uuid)+'['+propStr(c.properties)+']').join(' '));
+      if(SKIP.test(svc.uuid)) continue;
+      const nots=chars.filter(c=>c.properties.notify||c.properties.indicate);
+      const wrs=chars.filter(c=>c.properties.write||c.properties.writeWithoutResponse);
+      const known=SERVICES.indexOf(svc.uuid.toLowerCase());
+      for(const n of nots) for(const w of wrs) pairs.push({svc, rx:n, tx:w, rank: known<0?99:known});
+    }
+    pairs.sort((a,b)=>a.rank-b.rank);
+    if(!pairs.length) throw new Error('nessun canale dati trovato: l\'adattatore potrebbe non essere Bluetooth LE');
+    setStatus('Cerco il canale dati dell\'ELM327…');
+    for(const p of pairs){
+      log('Provo '+short(p.svc.uuid)+' → ricevo '+short(p.rx.uuid)+', invio '+short(p.tx.uuid));
+      try{ await p.rx.startNotifications(); }catch(e){ log('  notifiche non attivabili: '+e.message); continue; }
+      if(!p.rx._cockpitListener){
+        p.rx._cockpitListener=true;
+        p.rx.addEventListener('characteristicvaluechanged',e=>onRx(p.rx,e));
+      }
+      rxChar=p.rx; txChar=p.tx;
+      const r=await cmd('ATI',2500);
+      if(/ELM|OBD|V\d|OK|\?/i.test(r)){ log('  risponde: '+r.replace(/\s+/g,' ')); break; }
+      log('  nessuna risposta'); rxChar=null; txChar=null;
+    }
+    if(!txChar) throw new Error('l\'adattatore non risponde ai comandi ELM327. Apri "Registro collegamento" e inviamelo.');
+    setStatus('Inizializzazione ELM327…');
+    for(const c of ['ATZ','ATE0','ATL0','ATS0','ATH0','ATSP0']) await cmd(c, c==='ATZ'?3000:1500);
+    const probe=await cmd('0100',8000); // ricerca automatica del protocollo dell'auto
+    if(!/41\s*00/i.test(probe)) throw new Error('l\'adattatore risponde ma l\'auto no ('+(probe.replace(/\s+/g,' ')||'nessun dato')+'). Il quadro è acceso?');
+    setRunning(true,true); setStatus('Collegato a '+(dev.name||'adattatore OBD'),'live');
+    Object.assign(state,{maf:null,map:null,fuelRate:null,tyres:[null,null,null,null],tyreTemps:[null,null,null,null],tyreNote:'Cerco la centralina pressione gomme…'}); resetTrip();
+    tyreTries=0; tyreSupported=null;
+    await readDtc(true);
+    await readTyres();
+    poll();
+  }catch(err){
+    setRunning(false,false);
+    if(err.name!=='NotFoundError') log('ERRORE: '+err.message);
+    setStatus(err.name==='NotFoundError'?'Nessun adattatore scelto.':'Connessione non riuscita: '+err.message);
+  }
+}
+function onRx(ch,e){
+  if(ch!==rxChar) return;
+  rxBuf += dec.decode(e.target.value);
+  if(rxBuf.includes('>') && pending){ const r=rxBuf.replace(/>/g,'').trim(); rxBuf=''; const p=pending; pending=null; p(r); }
+}
+// i primi 40 comandi e tutti gli errori finiscono nel registro, poi si smette per non rallentare
+let cmdCount=0;
+function cmd(c,timeout=1500){
+  const verbose = cmdCount++ < 40;
+  return new Promise(async res=>{
+    const to=setTimeout(()=>{ if(pending){ pending=null; if(verbose||rxBuf) log('→ '+c+'  ⏱ nessuna risposta'+(rxBuf?' (parziale: '+rxBuf.replace(/\s+/g,' ')+')':'')); rxBuf=''; res(''); } },timeout);
+    pending=r=>{ clearTimeout(to); if(verbose) log('→ '+c+'  ← '+(r.replace(/\s+/g,' ')||'(vuoto)')); res(r); };
+    try{
+      const data=enc.encode(c+'\r');
+      // scrittura con conferma quando possibile: più affidabile sugli adattatori economici
+      if(txChar.properties.write) await txChar.writeValue(data); else await txChar.writeValueWithoutResponse(data);
+    }catch(e){ clearTimeout(to); pending=null; log('→ '+c+'  ✗ invio fallito: '+e.message); res(''); }
+  });
+}
+// ---------- Registro collegamento ----------
+const logLines=[];
+function log(s){
+  const t=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logLines.push(t+'  '+s); if(logLines.length>150) logLines.shift();
+  const el=$('logBox'); if(el){ el.textContent=logLines.join('\n'); el.scrollTop=el.scrollHeight; }
+}
+const short=u=>{ const m=/^0000([0-9a-f]{4})-0000-1000-8000-00805f9b34fb$/i.exec(u); return m?m[1]:u.slice(0,8); };
+const propStr=p=>[p.notify&&'N',p.indicate&&'I',p.write&&'W',p.writeWithoutResponse&&'w'].filter(Boolean).join('');
+function bytes(resp,mode,pid){
+  const hex=resp.replace(/[^0-9A-F]/gi,'').toUpperCase(), key=mode+pid, i=hex.indexOf(key);
+  if(i<0) return null;
+  const out=[]; for(let j=i+key.length;j+1<hex.length;j+=2) out.push(parseInt(hex.substr(j,2),16));
+  return out;
+}
+const PIDS=[
+  {pid:'0C',f:b=>state.rpm=(b[0]*256+b[1])/4, fast:true},
+  {pid:'0D',f:b=>state.speed=b[0], fast:true},
+  {pid:'11',f:b=>state.tps=b[0]*100/255, fast:true},
+  {pid:'04',f:b=>state.load=b[0]*100/255},
+  {pid:'05',f:b=>state.coolant=b[0]-40},
+  {pid:'2F',f:b=>state.fuel=b[0]*100/255},
+  {pid:'0F',f:b=>state.iat=b[0]-40},
+  {pid:'5E',f:b=>state.fuelRate=(b[0]*256+b[1])/20, fast:true},
+  {pid:'10',f:b=>state.maf=(b[0]*256+b[1])/100, fast:true},
+  {pid:'0B',f:b=>state.map=b[0], fast:true},
+];
+async function poll(){
+  polling=true; let n=0, unsupported=new Set();
+  while(polling){
+    for(const p of PIDS){
+      if(!polling) break;
+      if(unsupported.has(p.pid) || (!p.fast && n%5)) continue;
+      // basta una fonte di consumo: salta quelle meno precise se c'è una migliore
+      if(p.pid==='10' && state.fuelRate!=null) continue;
+      if(p.pid==='0B' && (state.fuelRate!=null || state.maf!=null)) continue;
+      const r=await cmd('01'+p.pid);
+      if(/NO DATA|\?/.test(r)){ unsupported.add(p.pid); continue; }
+      const b=bytes(r,'41',p.pid); if(b&&b.length) p.f(b);
+    }
+    if(n%10===0){ const v=parseFloat((await cmd('ATRV')).replace(/[^0-9.]/g,'')); if(!isNaN(v)) state.batt=v; }
+    // la pressione cambia lentamente: una lettura ogni ~30 giri di interrogazione
+    if(polling && n%30===0) await readTyres();
+    n++;
+  }
+}
+const DTC_PREFIX=['P','C','B','U'];
+async function readDtc(silent){
+  const r=await cmd('03',4000);
+  const hex=r.replace(/[^0-9A-F]/gi,'').toUpperCase();
+  const codes=[]; let i=hex.indexOf('43');
+  while(i>=0){
+    let j=i+2; // salta eventuale contatore (CAN)
+    const chunk=hex.slice(j).split('43')[0];
+    let body=chunk.length%4===2?chunk.slice(2):chunk;
+    for(let k=0;k+3<body.length;k+=4){
+      const w=body.substr(k,4); if(w==='0000') continue;
+      const n=parseInt(w[0],16); codes.push(DTC_PREFIX[n>>2]+(n&3)+w.slice(1));
+    }
+    i=hex.indexOf('43',i+2+chunk.length);
+  }
+  state.dtc=codes.length;
+  if(silent && !codes.length) return;
+  $('dtcPanel').hidden=false;
+  $('dtcList').innerHTML = codes.length ? codes.map(c=>`<li>${c}</li>`).join('') : '<li>Nessun codice errore memorizzato.</li>';
+}
+let clearArmed=false;
+async function clearDtc(){
+  if(!clearArmed){ clearArmed=true; $('btnClear').textContent='Conferma cancellazione'; setTimeout(()=>{clearArmed=false; $('btnClear').textContent='Cancella errori';},4000); return; }
+  clearArmed=false; $('btnClear').textContent='Cancella errori';
+  const was=polling; polling=false; await new Promise(r=>setTimeout(r,300));
+  await cmd('04',4000); await readDtc(false);
+  if(was) poll();
+}
+function stopAll(){
+  stopDemo(); polling=false;
+  if(dev&&dev.gatt.connected) dev.gatt.disconnect();
+  dev=null; txChar=null; rxChar=null;
+  Object.assign(state,{rpm:0,speed:0,tps:0}); setRunning(false,false); setStatus('Fermo.');
+}
+$('btnConnect').onclick=connect;
+$('btnDemo').onclick=startDemo;
+$('btnStop').onclick=stopAll;
+$('btnDtc').onclick=()=>readDtc(false);
+$('btnClear').onclick=clearDtc;
+// ---------- Finestre ----------
+const VIEWS=['cockpit','consumi','gomme','diagnosi','impostazioni'];
+function showView(){
+  const name=VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'cockpit';
+  VIEWS.forEach(v=>{ $('v-'+v).hidden = v!==name; });
+  document.querySelectorAll('.tabs a').forEach(a=>{ if(a.dataset.view===name) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  if(name==='cockpit') gauges.forEach(g=>g.resize());
+  try{ localStorage.setItem('cockpit-view',name); }catch(e){}
+}
+window.addEventListener('hashchange',showView);
+if(!location.hash){ try{ const v=localStorage.getItem('cockpit-view'); if(v&&VIEWS.includes(v)) history.replaceState(null,'','#'+v); }catch(e){} }
+showView();
+$('btnCopyLog').onclick=()=>{
+  const txt=logLines.join('\n')||'(registro vuoto)';
+  const done=()=>{ $('btnCopyLog').textContent='Copiato'; setTimeout(()=>$('btnCopyLog').textContent='Copia registro',2000); };
+  const fallback=()=>{ const r=document.createRange(); r.selectNodeContents($('logBox')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); try{ document.execCommand('copy'); done(); }catch(e){} };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,fallback); else fallback();
+};
+render();
+// avvia la demo all'apertura così il cruscotto si vede subito al lavoro
+startDemo();
+</script>
+
+</body>
+</html>
