@@ -577,9 +577,24 @@ async function connect(){
     }
     if(!txChar) throw new Error('l\'adattatore non risponde ai comandi ELM327. Apri "Registro collegamento" e inviamelo.');
     setStatus('Inizializzazione ELM327…');
-    for(const c of ['ATZ','ATE0','ATL0','ATS0','ATH0','ATSP0']) await cmd(c, c==='ATZ'?3000:1500);
-    const probe=await cmd('0100',8000); // ricerca automatica del protocollo dell'auto
-    if(!/41\s*00/i.test(probe)) throw new Error('l\'adattatore risponde ma l\'auto no ('+(probe.replace(/\s+/g,' ')||'nessun dato')+'). Il quadro è acceso?');
+    for(const c of ['ATZ','ATE0','ATL0','ATS0','ATH0','ATAT2','ATST FF']) await cmd(c, c==='ATZ'?3000:1500);
+    // Molti ELM327 "v2.1" economici sbagliano la ricerca automatica del protocollo.
+    // La cee'd del 2016 usa il CAN 11 bit a 500 kbit/s (protocollo 6): lo si prova per primo,
+    // poi gli altri, e quello che funziona viene ricordato per la volta successiva.
+    let proto=null;
+    try{ proto=localStorage.getItem('cockpit-proto'); }catch(e){}
+    const order=[...new Set([proto,'6','8','7','9','0','3','5','4'].filter(Boolean))];
+    let found=null;
+    for(const p of order){
+      setStatus('Cerco il protocollo dell\'auto ('+PROTO_NAMES[p]+')…');
+      await cmd('ATPC',1000);
+      await cmd('ATSP'+p);
+      const r=await cmd('0100', /[0345]/.test(p)?12000:6000);
+      if(/41\s*00/i.test(r)){ found=p; break; }
+    }
+    if(!found) throw new Error('l\'adattatore risponde ma l\'auto no con nessun protocollo. Accendi il quadro (chiave in posizione ON o motore acceso) e riprova.');
+    log('Protocollo dell\'auto: '+PROTO_NAMES[found]);
+    try{ localStorage.setItem('cockpit-proto',found); }catch(e){}
     setRunning(true,true); setStatus('Collegato a '+(dev.name||'adattatore OBD'),'live');
     Object.assign(state,{maf:null,map:null,fuelRate:null,tyres:[null,null,null,null],tyreTemps:[null,null,null,null],tyreNote:'Cerco la centralina pressione gomme…'}); resetTrip();
     tyreTries=0; tyreSupported=null;
@@ -592,6 +607,7 @@ async function connect(){
     setStatus(err.name==='NotFoundError'?'Nessun adattatore scelto.':'Connessione non riuscita: '+err.message);
   }
 }
+const PROTO_NAMES={'0':'automatico','3':'ISO 9141-2','4':'KWP2000 lento','5':'KWP2000 rapido','6':'CAN 11 bit 500k','7':'CAN 29 bit 500k','8':'CAN 11 bit 250k','9':'CAN 29 bit 250k'};
 function onRx(ch,e){
   if(ch!==rxChar) return;
   rxBuf += dec.decode(e.target.value);
@@ -600,7 +616,7 @@ function onRx(ch,e){
 // i primi 40 comandi e tutti gli errori finiscono nel registro, poi si smette per non rallentare
 let cmdCount=0;
 function cmd(c,timeout=1500){
-  const verbose = cmdCount++ < 40;
+  const verbose = cmdCount++ < 60;
   return new Promise(async res=>{
     const to=setTimeout(()=>{ if(pending){ pending=null; if(verbose||rxBuf) log('→ '+c+'  ⏱ nessuna risposta'+(rxBuf?' (parziale: '+rxBuf.replace(/\s+/g,' ')+')':'')); rxBuf=''; res(''); } },timeout);
     pending=r=>{ clearTimeout(to); if(verbose) log('→ '+c+'  ← '+(r.replace(/\s+/g,' ')||'(vuoto)')); res(r); };
