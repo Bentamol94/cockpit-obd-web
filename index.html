@@ -6,7 +6,7 @@
 <style>body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
 <title>Cockpit OBD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;800&family=B612+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;800&family=B612+Mono:wght@400;700&family=Inter:wght@300;400;500;600&family=Jost:wght@400;500&family=Libre+Baskerville:ital@1&display=swap">
 <style>
 /* Layout: app a finestre come un infotainment — barra di stato in alto, una finestra alla volta, schede in basso */
 :root{
@@ -116,6 +116,81 @@ button[disabled]{opacity:.4;cursor:not-allowed}
 .dtc{color:var(--ink)} .dtc li{margin:2px 0}
 details summary{cursor:pointer;font-family:var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);font-size:15px}
 details p{max-width:70ch}
+
+/* ---- selettore stile ---- */
+.skins{display:flex;gap:4px;justify-content:center;background:#0b0e11;border:1px solid var(--bezel);border-radius:999px;padding:4px;margin:0 auto;width:max-content;max-width:100%}
+.skins button{padding:6px 16px;font-size:13px;border:0;background:transparent;color:var(--dim)}
+.skins button[aria-pressed="true"]{background:#1d242b;color:var(--ink)}
+#v-cockpit[data-skin="tesla"] .tells{display:none}
+
+/* ---- stile Tesla ---- */
+:root{--ts-bg:#e9ebee;--ts-card:#f7f8fa;--ts-ink:#171a20;--ts-dim:#7d838d;--ts-line:#d3d6dc;--ts-blue:#3e6ae1;--ts-car1:#d9dce1;--ts-car2:#fbfbfc;--ts-glass:#9aa3b0;--ts-wheel:#2b2e34;--ts-amber:#e08a00;--ts-red:#d93025;
+  --f-ts:"Inter",system-ui,sans-serif}
+.tesla{--ts-on:var(--ts-ink);background:var(--ts-card);color:var(--ts-ink);font-family:var(--f-ts);border-radius:24px;padding:18px 22px 20px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:0 1px 0 #fff inset,0 18px 50px #0006}
+.tesla.night{--ts-bg:#0f1012;--ts-card:#17181b;--ts-ink:#eef0f3;--ts-dim:#80868f;--ts-line:#2b2d32;--ts-car1:#3a3d43;--ts-car2:#5a5e66;--ts-glass:#1e2024;--ts-wheel:#0b0c0d;box-shadow:0 18px 50px #000a}
+.ts-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px}
+.ts-gears{display:flex;gap:10px;font-weight:500;color:var(--ts-dim);letter-spacing:.02em}
+.ts-gears span.on{color:var(--ts-ink);font-weight:600;position:relative}
+.ts-gears span.on::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-5px;height:2px;border-radius:2px;background:var(--ts-blue)}
+.ts-time{color:var(--ts-dim);font-variant-numeric:tabular-nums}
+.ts-fuel{display:flex;align-items:center;gap:8px;font-weight:500;font-variant-numeric:tabular-nums}
+.ts-pill{width:42px;height:16px;border:1.5px solid var(--ts-ink);border-radius:5px;padding:2px;box-sizing:border-box;position:relative}
+.ts-pill::after{content:"";position:absolute;right:-5px;top:4px;width:3px;height:6px;border-radius:0 2px 2px 0;background:var(--ts-ink)}
+.ts-pill i{display:block;height:100%;width:0;border-radius:2px;background:var(--ts-ink);transition:width .4s}
+.ts-pill.low i{background:var(--ts-red)}
+.ts-main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:center}
+.ts-left{display:flex;flex-direction:column;align-items:center;min-width:0}
+.ts-speed{font-size:clamp(84px,16vw,170px);font-weight:500;line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.ts-unit{font-size:15px;color:var(--ts-dim);font-weight:500;margin-top:4px}
+.ts-power{position:relative;width:min(320px,90%);height:4px;border-radius:4px;background:var(--ts-line);margin:20px 0 10px;overflow:hidden}
+.ts-power i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ts-ink);border-radius:4px;transition:width .15s}
+.ts-power b{position:absolute;left:75%;top:0;bottom:0;width:2px;background:var(--ts-red)}
+.ts-power.hot i{background:var(--ts-red)}
+.ts-sub{font-size:14px;color:var(--ts-dim);font-variant-numeric:tabular-nums}
+.ts-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px;min-height:26px}
+.ts-chips span{font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:var(--ts-bg);color:var(--ts-ink)}
+.ts-chips span.warn{color:var(--ts-amber)} .ts-chips span.crit{color:var(--ts-red)}
+.ts-car{display:grid;grid-template-columns:1fr minmax(90px,140px) 1fr;grid-template-rows:1fr 1fr;align-items:center;gap:0 10px;justify-items:center}
+.ts-car svg{grid-column:2;grid-row:1/3;width:100%;max-height:300px}
+.ts-ty{font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ts-ty small{display:block;font-size:11px;color:var(--ts-dim);font-weight:400;text-align:center}
+.ts-ty.fl{grid-column:1;grid-row:1;justify-self:end;align-self:start;margin-top:16%} .ts-ty.fr{grid-column:3;grid-row:1;justify-self:start;align-self:start;margin-top:16%}
+.ts-ty.rl{grid-column:1;grid-row:2;justify-self:end;align-self:end;margin-bottom:16%} .ts-ty.rr{grid-column:3;grid-row:2;justify-self:start;align-self:end;margin-bottom:16%}
+.ts-ty.warn{color:var(--ts-amber)} .ts-ty.crit{color:var(--ts-red)}
+.ts-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border-top:1px solid var(--ts-line);padding-top:14px}
+.ts-stats div{text-align:center;min-width:0}
+.ts-stats span{display:block;font-size:12px;color:var(--ts-dim)}
+.ts-stats b{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ts-ink)}
+@media (max-width:640px){ .ts-main{grid-template-columns:1fr} .ts-stats{grid-template-columns:repeat(2,minmax(0,1fr))} .ts-car svg{max-height:200px} }
+
+/* ---- stile d'epoca ---- */
+:root{--ep-wood1:#3b2012;--ep-wood2:#6e3f1f;--ep-wood3:#8a5329;--ep-cream:#f3ead6;--ep-ink:#1d1a14;--ep-red:#b8261a;--ep-chrome1:#f4f5f6;--ep-chrome2:#8d9297;
+  --f-ep:"Jost","Futura","Century Gothic",sans-serif;--f-ep-script:"Libre Baskerville",Georgia,serif}
+.epoca{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px) minmax(0,1fr);gap:14px;align-items:center;padding:22px 20px;border-radius:30px;
+  background:
+    repeating-linear-gradient(97deg,transparent 0 7px,rgba(0,0,0,.12) 7px 8px,transparent 8px 19px,rgba(255,220,170,.05) 19px 21px),
+    radial-gradient(140% 90% at 30% 20%,var(--ep-wood3),var(--ep-wood2) 45%,var(--ep-wood1));
+  box-shadow:inset 0 2px 0 rgba(255,230,190,.25),inset 0 -6px 18px rgba(0,0,0,.45),0 18px 50px #000a}
+.ep-dial{position:relative;width:100%;aspect-ratio:1;justify-self:center}
+.ep-dial.big{max-width:400px}
+.ep-dial canvas{width:100%;height:100%;display:block}
+.ep-mid{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.ep-smalls{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.ep-odo{display:flex;flex-direction:column;align-items:center;gap:4px}
+#eOdo{display:flex;gap:2px;padding:4px;border-radius:4px;background:#111;box-shadow:inset 0 2px 4px #000,0 0 0 2px var(--ep-chrome2)}
+#eOdo span{display:block;width:18px;padding:3px 0;text-align:center;font:500 18px var(--f-ep);color:#f1ece1;
+  background:linear-gradient(#000,#2b2b2b 45%,#2b2b2b 55%,#000);border-radius:2px;font-variant-numeric:tabular-nums}
+#eOdo span.dec{color:var(--ep-ink);background:linear-gradient(#bdb39e,#f3ead6 45%,#f3ead6 55%,#bdb39e)}
+.ep-odo small{font:italic 12px var(--f-ep-script);color:#e8d3b0}
+.ep-plate{font:italic 17px var(--f-ep-script);color:#2a1a0c;padding:5px 16px;border-radius:6px;
+  background:linear-gradient(var(--ep-chrome1),var(--ep-chrome2) 60%,var(--ep-chrome1));box-shadow:0 2px 4px #0008}
+.ep-plate em{font-size:12px;font-style:normal;font-family:var(--f-ep);letter-spacing:.08em;margin-left:4px}
+@media (max-width:640px){
+  .epoca{grid-template-columns:1fr 1fr;padding:16px}
+  .ep-mid{grid-column:1/-1;grid-row:2}
+  .ep-smalls{max-width:320px}
+}
 @media (max-width:820px){
   .cluster{grid-template-columns:1fr 1fr;border-radius:24px}
   .mfd{grid-column:1/-1;order:3}
@@ -146,7 +221,12 @@ details p{max-width:70ch}
 
 <main class="wrap">
   <!-- ===== COCKPIT ===== -->
-  <section class="view" id="v-cockpit" aria-label="Cockpit">
+  <section class="view" id="v-cockpit" aria-label="Cockpit" data-skin="sport">
+    <div class="skins" role="group" aria-label="Stile del cockpit">
+      <button type="button" data-skin="sport" aria-pressed="true">Sport</button>
+      <button type="button" data-skin="tesla" aria-pressed="false">Tesla</button>
+      <button type="button" data-skin="epoca" aria-pressed="false">Epoca</button>
+    </div>
     <div class="tells" aria-label="Spie">
       <div class="tell t-crit" id="tCoolant" title="Temperatura liquido alta"><svg viewBox="0 0 24 24"><path d="M11 2h2v9.2a4 4 0 1 1-2 0V9h-3V7h3V5h-3V3h3zM3 19c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1zm12 0c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1z"/></svg></div>
       <div class="tell t-warn" id="tEngine" title="Spia motore (codici errore)"><svg viewBox="0 0 24 24"><path d="M7 5h6v2h-2v2h4l2 2h2v-2h2v8h-2v-2h-2l-2 3H9l-2-2H5v2H3V9h2v2h2V9h2V7H7z"/></svg></div>
@@ -156,7 +236,7 @@ details p{max-width:70ch}
       <div class="tell t-ok" id="tLink" title="Collegamento OBD attivo"><svg viewBox="0 0 24 24"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.5-3.5a3 3 0 0 1 4.2 4.2l-2 2-1.4-1.4 2-2a1 1 0 0 0-1.4-1.4l-3.5 3.5a1 1 0 0 1-1.4 0zm2.8-2.8a1 1 0 0 1 0 1.4l-3.5 3.5a3 3 0 0 1-4.2-4.2l2-2 1.4 1.4-2 2a1 1 0 0 0 1.4 1.4l3.5-3.5a1 1 0 0 1 1.4 0z"/></svg></div>
     </div>
 
-    <div class="cluster" aria-label="Quadro strumenti">
+    <div class="cluster" id="cl-sport" aria-label="Quadro strumenti">
       <div class="gauge"><canvas id="rpm" aria-label="Contagiri"></canvas>
         <div class="read"><b id="rpmVal">0</b><span>giri/min</span></div></div>
 
@@ -176,6 +256,58 @@ details p{max-width:70ch}
 
       <div class="gauge"><canvas id="spd" aria-label="Tachimetro"></canvas>
         <div class="read"><b id="spdVal">0</b><span>km/h</span></div></div>
+    </div>
+
+    <!-- Stile Tesla: schermo unico, velocità in cifre, auto vista dall'alto -->
+    <div class="tesla" id="cl-tesla" hidden aria-label="Cockpit stile Tesla">
+      <div class="ts-top">
+        <div class="ts-gears" id="tsGears" aria-label="Marcia"><span>N</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+        <div class="ts-time" id="tsClock">--:--</div>
+        <div class="ts-fuel" aria-label="Carburante"><div class="ts-pill"><i id="tsFuelBar"></i></div><span id="tsRange">--- km</span></div>
+      </div>
+      <div class="ts-main">
+        <div class="ts-left">
+          <div class="ts-speed" id="tsSpeed">0</div>
+          <div class="ts-unit">km/h</div>
+          <div class="ts-power" aria-hidden="true"><i id="tsPower"></i><b></b></div>
+          <div class="ts-sub"><span id="tsRpm">0</span> giri/min · <span id="tsInst">--,-</span> km/l</div>
+          <div class="ts-chips" id="tsChips"></div>
+        </div>
+        <div class="ts-car">
+          <span class="ts-ty fl" id="tsFL">--</span><span class="ts-ty fr" id="tsFR">--</span>
+          <svg viewBox="0 0 120 240" aria-hidden="true">
+            <defs><linearGradient id="tsBody" x1="0" x2="1"><stop offset="0" stop-color="var(--ts-car1)"/><stop offset=".5" stop-color="var(--ts-car2)"/><stop offset="1" stop-color="var(--ts-car1)"/></linearGradient></defs>
+            <rect x="12" y="44" width="10" height="36" rx="4" fill="var(--ts-wheel)"/><rect x="98" y="44" width="10" height="36" rx="4" fill="var(--ts-wheel)"/>
+            <rect x="12" y="164" width="10" height="36" rx="4" fill="var(--ts-wheel)"/><rect x="98" y="164" width="10" height="36" rx="4" fill="var(--ts-wheel)"/>
+            <rect x="18" y="8" width="84" height="224" rx="36" fill="url(#tsBody)" stroke="var(--ts-line)"/>
+            <path d="M30 78 Q60 62 90 78 L84 104 Q60 96 36 104 Z" fill="var(--ts-glass)"/>
+            <rect x="34" y="110" width="52" height="56" rx="10" fill="var(--ts-glass)" opacity=".55"/>
+            <path d="M36 172 Q60 178 84 172 L88 194 Q60 202 32 194 Z" fill="var(--ts-glass)"/>
+            <ellipse cx="14" cy="96" rx="6" ry="4" fill="var(--ts-car1)"/><ellipse cx="106" cy="96" rx="6" ry="4" fill="var(--ts-car1)"/>
+          </svg>
+          <span class="ts-ty rl" id="tsRL">--</span><span class="ts-ty rr" id="tsRR">--</span>
+        </div>
+      </div>
+      <div class="ts-stats">
+        <div><span>Media</span><b id="tsAvg">--,- km/l</b></div>
+        <div><span>Acqua</span><b id="tsCool">-- °C</b></div>
+        <div><span>Batteria</span><b id="tsBatt">-- V</b></div>
+        <div><span>Viaggio</span><b id="tsTrip">0,0 km</b></div>
+      </div>
+    </div>
+
+    <!-- Stile d'epoca: quadranti avorio con ghiera cromata su plancia in radica -->
+    <div class="epoca" id="cl-epoca" hidden aria-label="Cockpit stile d'epoca">
+      <div class="ep-dial big"><canvas id="eRpm" aria-label="Contagiri"></canvas></div>
+      <div class="ep-mid">
+        <div class="ep-smalls">
+          <div class="ep-dial small"><canvas id="eTemp" aria-label="Temperatura acqua"></canvas></div>
+          <div class="ep-dial small"><canvas id="eFuel" aria-label="Livello gasolio"></canvas></div>
+        </div>
+        <div class="ep-odo" aria-label="Contachilometri parziale"><div id="eOdo"></div><small>parziale km</small></div>
+        <div class="ep-plate">cee'd <em>1.6 CRDi</em></div>
+      </div>
+      <div class="ep-dial big"><canvas id="eSpd" aria-label="Tachimetro"></canvas></div>
     </div>
   </section>
 
@@ -274,9 +406,10 @@ details p{max-width:70ch}
 <script>
 // ---------- Strumenti analogici ----------
 const DPR = Math.min(window.devicePixelRatio||1, 2);
+const $id=id=>document.getElementById(id);
 function makeGauge(canvas, opt){
   const g = {canvas, ctx:canvas.getContext('2d'), opt, val:0, shown:0};
-  g.resize = ()=>{ const r=canvas.getBoundingClientRect(); canvas.width=r.width*DPR; canvas.height=r.height*DPR; g.draw(); };
+  g.resize = ()=>{ const r=canvas.getBoundingClientRect(); if(!r.width) return; canvas.width=r.width*DPR; canvas.height=r.height*DPR; g.draw(); };
   g.draw = ()=>{
     const c=g.ctx, W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2*0.94;
     const a0=Math.PI*0.75, a1=Math.PI*2.25, {max,major,minor,red,label,fmt}=opt;
@@ -315,10 +448,66 @@ function makeGauge(canvas, opt){
 // Kia cee'd 1.6 CRDi 110 CV: diesel, limitatore attorno ai 4500 giri, velocità massima 182 km/h
 const gRpm = makeGauge(document.getElementById('rpm'),{max:6000,major:1000,minor:250,red:4500,label:'×1000 RPM',fmt:v=>v/1000});
 const gSpd = makeGauge(document.getElementById('spd'),{max:220,major:20,minor:10,red:0,label:'KM/H',fmt:v=>v});
-const gauges=[gRpm,gSpd];
+// ---------- Quadranti d'epoca ----------
+function makeVintage(canvas, opt){
+  const g = {canvas, ctx:canvas.getContext('2d'), opt, val:opt.min||0, shown:opt.min||0};
+  g.resize = ()=>{ const r=canvas.getBoundingClientRect(); if(!r.width) return; canvas.width=r.width*DPR; canvas.height=r.height*DPR; g.draw(); };
+  g.draw = ()=>{
+    const c=g.ctx, W=canvas.width, H=canvas.height; if(!W) return;
+    const cx=W/2, cy=H/2, R=Math.min(W,H)/2*0.97, {min=0,max,a0,a1,major,minor,red,labels,fmt,caption,sub}=opt;
+    const ang=v=>a0+(a1-a0)*Math.max(0,Math.min(1,(v-min)/(max-min)));
+    c.clearRect(0,0,W,H);
+    // ghiera cromata
+    let gr=c.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
+    gr.addColorStop(0,'#fdfdfd'); gr.addColorStop(.35,'#8d9297'); gr.addColorStop(.55,'#f1f2f3'); gr.addColorStop(1,'#5f6468');
+    c.fillStyle=gr; c.beginPath(); c.arc(cx,cy,R,0,Math.PI*2); c.fill();
+    c.fillStyle='#231a10'; c.beginPath(); c.arc(cx,cy,R*0.92,0,Math.PI*2); c.fill();
+    // quadrante avorio
+    const fg=c.createRadialGradient(cx-R*0.2,cy-R*0.3,R*0.05,cx,cy,R*0.9);
+    fg.addColorStop(0,'#fcf6e6'); fg.addColorStop(.7,'#efe3c4'); fg.addColorStop(1,'#d3bf94');
+    c.fillStyle=fg; c.beginPath(); c.arc(cx,cy,R*0.9,0,Math.PI*2); c.fill();
+    // zona rossa
+    if(red!=null){ c.strokeStyle='#b8261a'; c.lineWidth=R*0.035; c.beginPath(); c.arc(cx,cy,R*0.8,ang(red),a1); c.stroke(); }
+    // tacche
+    for(let v=min; v<=max+1e-6; v+=minor){
+      const isMaj=Math.abs((v-min)/major-Math.round((v-min)/major))<1e-6, a=ang(v);
+      const r1=R*0.84, r2=R*(isMaj?0.72:0.78);
+      c.strokeStyle = red!=null && v>=red ? '#b8261a' : '#1d1a14';
+      c.lineWidth=R*(isMaj?0.022:0.01); c.lineCap='butt';
+      c.beginPath(); c.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1); c.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2); c.stroke();
+    }
+    // numeri
+    c.textAlign='center'; c.textBaseline='middle';
+    const nums = labels || (()=>{ const out=[]; for(let v=min; v<=max+1e-6; v+=major) out.push([v,fmt?fmt(v):String(v)]); return out; })();
+    c.font=`500 ${R*(labels?0.15:0.14)}px "Jost","Futura",sans-serif`;
+    nums.forEach(([v,t])=>{ const a=ang(v); c.fillStyle = red!=null && v>=red ? '#b8261a' : '#1d1a14'; c.fillText(t,cx+Math.cos(a)*R*0.58,cy+Math.sin(a)*R*0.58); });
+    // scritte
+    if(caption){ c.fillStyle='#4a3a24'; c.font=`italic ${R*0.1}px "Libre Baskerville",Georgia,serif`; c.fillText(caption,cx,cy+R*(sub?0.3:0.42)); }
+    if(sub){ c.fillStyle='#6b5a40'; c.font=`500 ${R*0.07}px "Jost",sans-serif`; c.fillText(sub,cx,cy+R*0.45); }
+    // lancetta con contrappeso
+    const a=ang(g.shown);
+    c.save(); c.translate(cx,cy); c.rotate(a);
+    c.shadowColor='rgba(0,0,0,.35)'; c.shadowBlur=R*0.03; c.shadowOffsetX=R*0.012; c.shadowOffsetY=R*0.02;
+    c.fillStyle='#b8261a'; c.beginPath(); c.moveTo(-R*0.2,-R*0.03); c.lineTo(R*0.8,-R*0.007); c.lineTo(R*0.82,0); c.lineTo(R*0.8,R*0.007); c.lineTo(-R*0.2,R*0.03); c.closePath(); c.fill();
+    c.restore();
+    const cg=c.createRadialGradient(cx-R*0.02,cy-R*0.02,0,cx,cy,R*0.085); cg.addColorStop(0,'#555'); cg.addColorStop(1,'#0c0c0c');
+    c.fillStyle=cg; c.beginPath(); c.arc(cx,cy,R*0.085,0,Math.PI*2); c.fill();
+    // riflesso del vetro
+    c.save(); c.beginPath(); c.arc(cx,cy,R*0.9,0,Math.PI*2); c.clip();
+    const gl=c.createLinearGradient(0,cy-R,0,cy); gl.addColorStop(0,'rgba(255,255,255,.32)'); gl.addColorStop(1,'rgba(255,255,255,0)');
+    c.fillStyle=gl; c.beginPath(); c.ellipse(cx-R*0.18,cy-R*0.5,R*0.78,R*0.4,-0.35,0,Math.PI*2); c.fill(); c.restore();
+  };
+  return g;
+}
+const DEG=Math.PI/180;
+const eRpm=makeVintage($id('eRpm'),{min:0,max:6000,a0:150*DEG,a1:390*DEG,major:1000,minor:500,red:4500,fmt:v=>v/1000,caption:'giri',sub:'× 1000 / min'});
+const eSpd=makeVintage($id('eSpd'),{min:0,max:220,a0:150*DEG,a1:390*DEG,major:20,minor:10,caption:'km/h',labels:[0,40,80,120,160,200].map(v=>[v,String(v)])});
+const eTemp=makeVintage($id('eTemp'),{min:50,max:130,a0:200*DEG,a1:340*DEG,major:40,minor:10,red:115,labels:[[50,'50'],[90,'90'],[130,'130']],caption:'acqua'});
+const eFuel=makeVintage($id('eFuel'),{min:0,max:100,a0:200*DEG,a1:340*DEG,major:50,minor:12.5,labels:[[0,'0'],[50,'½'],[100,'1']],caption:'gasolio'});
+const gauges=[gRpm,gSpd,eRpm,eSpd,eTemp,eFuel];
 const ro=new ResizeObserver(()=>gauges.forEach(g=>g.resize())); gauges.forEach(g=>ro.observe(g.canvas));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-function tick(){ gauges.forEach(g=>{ const d=g.val-g.shown; if(Math.abs(d)>0.01){ g.shown += reduce? d : d*0.18; g.draw(); } }); requestAnimationFrame(tick); }
+function tick(){ gauges.forEach(g=>{ const d=g.val-g.shown; if(Math.abs(d)>0.01 && g.canvas.width){ g.shown += reduce? d : d*0.18; g.draw(); } }); requestAnimationFrame(tick); }
 requestAnimationFrame(tick);
 
 // ---------- Display multifunzione ----------
@@ -346,7 +535,66 @@ function render(){
   $('tBatt').classList.toggle('on',state.batt!=null&&(state.batt<11.8||state.batt>15.2));
   $('tEngine').classList.toggle('on',state.dtc>0);
   renderTyres();
+  renderSkins();
 }
+// ---------- Aggiornamento stili Tesla ed epoca ----------
+const fmtIt=(v,d)=>v==null||isNaN(v)?null:v.toFixed(d).replace('.',',');
+function renderSkins(){
+  const skin=$('v-cockpit').dataset.skin;
+  if(skin==='epoca'){
+    eRpm.val=state.rpm; eSpd.val=state.speed;
+    eTemp.val=state.coolant==null?50:state.coolant; eFuel.val=state.fuel==null?0:state.fuel;
+    const t=Math.min(9999.9,state.trip).toFixed(1).padStart(6,'0');
+    const html=[...t.replace('.','')].map((d,i,arr)=>`<span${i===arr.length-1?' class="dec"':''}>${d}</span>`).join('');
+    if($('eOdo').innerHTML!==html) $('eOdo').innerHTML=html;
+  }
+  if(skin==='tesla'){
+    $('tsSpeed').textContent=Math.round(state.speed);
+    $('tsRpm').textContent=Math.round(state.rpm).toLocaleString('it-IT');
+    const g=$('gear').textContent;
+    [...$('tsGears').children].forEach(s=>s.classList.toggle('on', s.textContent===g || (g==='P'&&s.textContent==='N')));
+    $('tsPower').style.width=Math.min(100,state.rpm/6000*100)+'%';
+    $('tsPower').parentElement.classList.toggle('hot', state.rpm>=4500);
+    $('tsInst').textContent=fmtIt(instSmooth,1)||'--,-';
+    $('tsAvg').textContent=(fmtIt(state.litres>0.005?state.consKm/state.litres:null,1)||'--,-')+' km/l';
+    $('tsCool').textContent=state.coolant==null?'-- °C':Math.round(state.coolant)+' °C';
+    $('tsBatt').textContent=state.batt==null?'-- V':fmtIt(state.batt,1)+' V';
+    $('tsTrip').textContent=fmtIt(state.trip,1)+' km';
+    $('tsFuelBar').style.width=(state.fuel==null?0:state.fuel)+'%';
+    $('tsFuelBar').parentElement.classList.toggle('low', state.fuel!=null&&state.fuel<12);
+    $('tsRange').textContent=$('vRange').textContent;
+    $('tsClock').textContent=$('clock').textContent;
+    ['tsFL','tsFR','tsRL','tsRR'].forEach((id,i)=>{
+      const p=state.tyres[i], el=$(id);
+      el.innerHTML = p==null ? '--<small>bar</small>' : fmtIt(p,1)+'<small>bar</small>';
+      el.classList.toggle('crit',p!=null&&p<TYRE_CRIT); el.classList.toggle('warn',p!=null&&p>=TYRE_CRIT&&p<TYRE_LOW);
+    });
+    const chips=[];
+    if(state.dtc>0) chips.push(['warn','Controllo motore: '+state.dtc+' errori']);
+    if(state.coolant!=null&&state.coolant>=110) chips.push(['crit','Temperatura motore alta']);
+    if(state.fuel!=null&&state.fuel<12) chips.push(['warn','Riserva carburante']);
+    if(state.tyreWarn) chips.push(['warn','Pressione gomme bassa']);
+    if(state.batt!=null&&(state.batt<11.8||state.batt>15.2)) chips.push(['crit','Tensione batteria anomala']);
+    const html=chips.map(([k,t])=>`<span class="${k}">${t}</span>`).join('');
+    if($('tsChips').innerHTML!==html) $('tsChips').innerHTML=html;
+  }
+}
+// Tesla passa allo schermo scuro di sera, come l'auto vera con i fari accesi
+function teslaNight(){ const h=new Date().getHours(); $('cl-tesla').classList.toggle('night', h>=19||h<7); }
+teslaNight(); setInterval(teslaNight,60000);
+// ---------- Scelta dello stile ----------
+const SKINS=['sport','tesla','epoca'];
+function setSkin(name){
+  if(!SKINS.includes(name)) name='sport';
+  $('v-cockpit').dataset.skin=name;
+  $('cl-sport').hidden = name!=='sport';
+  $('cl-tesla').hidden = name!=='tesla';
+  $('cl-epoca').hidden = name!=='epoca';
+  document.querySelectorAll('.skins button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.skin===name)));
+  try{ localStorage.setItem('cockpit-skin',name); }catch(e){}
+  requestAnimationFrame(()=>{ gauges.forEach(g=>g.resize()); renderSkins(); });
+}
+document.querySelectorAll('.skins button').forEach(b=>b.addEventListener('click',()=>setSkin(b.dataset.skin)));
 // ---------- Pressione gomme ----------
 // Kia cee'd 1.6 CRDi con 205/55 R16: pressione consigliata circa 2,3 bar a vettura scarica
 const TYRE_LOW=2.0, TYRE_CRIT=1.7, TYRE_IDS=['tyFL','tyFR','tyRL','tyRR'];
@@ -724,6 +972,8 @@ function showView(){
 window.addEventListener('hashchange',showView);
 if(!location.hash){ try{ const v=localStorage.getItem('cockpit-view'); if(v&&VIEWS.includes(v)) history.replaceState(null,'','#'+v); }catch(e){} }
 showView();
+let savedSkin='sport'; try{ savedSkin=localStorage.getItem('cockpit-skin')||'sport'; }catch(e){}
+setSkin(savedSkin);
 $('btnCopyLog').onclick=()=>{
   const txt=logLines.join('\n')||'(registro vuoto)';
   const done=()=>{ $('btnCopyLog').textContent='Copiato'; setTimeout(()=>$('btnCopyLog').textContent='Copia registro',2000); };
