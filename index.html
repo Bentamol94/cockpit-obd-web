@@ -100,6 +100,15 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .carbody{grid-column:2;grid-row:1/3;height:150px;border:2px solid #2a333c;border-radius:30px 30px 22px 22px;position:relative}
 .carbody::before{content:"";position:absolute;inset:26px 8px auto;height:30px;border:1px solid #2a333c;border-radius:10px 10px 4px 4px}
 .tyre-note{text-align:center;margin-top:8px}
+.trip-sum{font-family:var(--f-data);font-size:14px;color:var(--ink);margin-top:10px;line-height:1.6}
+.trip-sum b{color:var(--lcd)}
+.trips{display:grid;margin-top:8px}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 2px;border-top:1px solid var(--bezel)}
+.trow .when{font-family:var(--f-disp);font-size:16px;color:var(--ink);letter-spacing:.03em}
+.trow .when small{color:var(--dim);font-family:var(--f-data);font-size:12px;margin-left:6px}
+.trow .kml{font-family:var(--f-data);font-size:17px;color:var(--lcd);text-align:right;font-variant-numeric:tabular-nums}
+.trow .det{grid-column:1/-1;font-family:var(--f-data);font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.trow.live .when::after{content:"in corso";margin-left:8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ok)}
 .tank{display:grid;gap:10px;margin-top:4px}
 .tank .bar{grid-template-columns:70px 1fr 70px}
 .tank-range{font-family:var(--f-data);font-size:15px;color:var(--dim)}
@@ -364,6 +373,13 @@ details p{max-width:70ch}
         <button id="btnAddFuel" type="button">Aggiungi</button>
       </div>
       <p class="note" id="tankNote">La cee'd non comunica il livello del gasolio via OBD. Premi "Ho fatto il pieno" dopo il rifornimento: l'app scala il gasolio che la centralina misura mentre guidi.</p>
+    </div>
+    <div class="panel screen">
+      <div class="list-head"><h2>Registro viaggi</h2>
+        <div class="row" style="margin:0"><button id="btnCopyTrips" type="button">Copia</button><button id="btnClearTrips" type="button">Svuota</button></div></div>
+      <div class="trip-sum" id="tripSum">Nessun viaggio registrato.</div>
+      <p class="note" id="tripNote">Ogni viaggio si registra da solo quando guidi con l'adattatore collegato: inizia all'avvio del motore e si chiude quando lo spegni o scolleghi l'app.</p>
+      <div class="trips" id="tripList"></div>
     </div>
   </section>
 
@@ -691,6 +707,74 @@ $('btnAddFuel').onclick=()=>{
   $('tankNote').textContent='Aggiunti '+v.toString().replace('.',',')+' litri.';
 };
 let tankSaveT=0;
+// ---------- Registro viaggi ----------
+// Un viaggio inizia quando il motore gira con l'adattatore collegato e si chiude allo spegnimento
+// (motore fermo da 90 secondi), alla disconnessione o con Stop. Salvato solo sul telefono.
+const nf=(v,d=0)=>v.toFixed(d).replace('.',',');
+const TRIPS_KEY='cockpit-trips', CUR_KEY='cockpit-trip-current', TRIPS_MAX=200;
+let trips=[], tripRec=null, tripSaveT=0;
+try{ trips=JSON.parse(localStorage.getItem(TRIPS_KEY)||'[]'); if(!Array.isArray(trips)) trips=[]; }catch(e){ trips=[]; }
+function saveTrips(){ try{ localStorage.setItem(TRIPS_KEY,JSON.stringify(trips.slice(0,TRIPS_MAX))); }catch(e){} }
+function saveCurrent(){ try{ if(tripRec) localStorage.setItem(CUR_KEY,JSON.stringify(tripRec)); else localStorage.removeItem(CUR_KEY); }catch(e){} }
+function startTrip(){ const now=Date.now(); tripRec={start:now,end:now,km:0,litres:0,vmax:0,movingMs:0,lastActive:now,coolMax:null}; renderTrips(); }
+function endTrip(){
+  if(!tripRec) return;
+  const t=tripRec; tripRec=null; saveCurrent();
+  if(t.km>=0.2 || (t.end-t.start)>120000){ trips.unshift(t); saveTrips(); }
+  renderTrips();
+}
+// un viaggio rimasto aperto (pagina chiusa durante la guida) viene chiuso al riavvio
+try{ const c=JSON.parse(localStorage.getItem(CUR_KEY)||'null'); localStorage.removeItem(CUR_KEY);
+  if(c&&c.start&&(c.km>=0.2||(c.end-c.start)>120000)){ trips.unshift(c); saveTrips(); } }catch(e){}
+function tripTick(dt,km,lhDelta){
+  if(!polling){ return; }
+  const now=Date.now();
+  if(!tripRec && state.rpm>300) startTrip();
+  if(!tripRec) return;
+  tripRec.km+=km; tripRec.litres+=lhDelta; tripRec.end=now;
+  tripRec.vmax=Math.max(tripRec.vmax,state.speed);
+  if(state.speed>3) tripRec.movingMs+=dt;
+  if(state.coolant!=null) tripRec.coolMax=Math.max(tripRec.coolMax??-99,state.coolant);
+  if(state.rpm>300) tripRec.lastActive=now;
+  if(now-tripRec.lastActive>90000){ tripRec.end=tripRec.lastActive; endTrip(); return; }
+  if((tripSaveT+=dt)>10000){ tripSaveT=0; saveCurrent(); }
+}
+const fmtDate=ms=>new Date(ms).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
+const fmtTime=ms=>new Date(ms).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+const fmtDur=ms=>{ const m=Math.round(ms/60000); return m<60 ? m+' min' : Math.floor(m/60)+' h '+(m%60)+' min'; };
+const kml=t=>t.litres>0.01 ? t.km/t.litres : null;
+function tripLine(t){
+  const k=kml(t), avgSp=t.movingMs>60000 ? t.km/(t.movingMs/3600000) : null;
+  return {when:fmtDate(t.start)+' · '+fmtTime(t.start)+'–'+fmtTime(t.end),
+    kml:k==null?'--,- km/l':Math.min(99.9,k).toFixed(1).replace('.',',')+' km/l',
+    det:[nf(t.km,1)+' km', fmtDur(t.end-t.start), nf(t.litres,2)+' l', avgSp?'media '+nf(avgSp)+' km/h':null, 'max '+nf(t.vmax)+' km/h'].filter(Boolean).join(' · ')};
+}
+function renderTrips(){
+  const list=(tripRec?[tripRec]:[]).concat(trips);
+  const since=Date.now()-30*86400000, last=trips.filter(t=>t.start>=since);
+  if(!trips.length) $('tripSum').textContent='Nessun viaggio registrato.';
+  else{
+    const km=last.reduce((a,t)=>a+t.km,0), l=last.reduce((a,t)=>a+t.litres,0);
+    $('tripSum').innerHTML='Ultimi 30 giorni: <b>'+last.length+'</b> '+(last.length===1?'viaggio':'viaggi')+' · <b>'+nf(km)+'</b> km · <b>'+nf(l,1)+'</b> l · media <b>'+(l>0.05?nf(km/l,1):'--,-')+'</b> km/l';
+  }
+  $('tripNote').hidden = list.length>0;
+  const html=list.slice(0,60).map((t,i)=>{ const r=tripLine(t); return `<div class="trow${t===tripRec?' live':''}"><div class="when">${r.when}</div><div class="kml">${r.kml}</div><div class="det">${r.det}</div></div>`; }).join('');
+  if($('tripList').innerHTML!==html) $('tripList').innerHTML=html;
+}
+setInterval(()=>{ if(tripRec && currentView==='consumi') renderTrips(); },2000);
+window.addEventListener('pagehide',saveCurrent);
+let clearTripsArmed=false;
+$('btnClearTrips').onclick=()=>{
+  if(!trips.length) return;
+  if(!clearTripsArmed){ clearTripsArmed=true; $('btnClearTrips').textContent='Conferma'; setTimeout(()=>{ clearTripsArmed=false; $('btnClearTrips').textContent='Svuota'; },4000); return; }
+  clearTripsArmed=false; $('btnClearTrips').textContent='Svuota'; trips=[]; saveTrips(); renderTrips();
+};
+$('btnCopyTrips').onclick=()=>{
+  const rows=trips.map(t=>{ const r=tripLine(t); return r.when+' — '+r.kml+' — '+r.det; });
+  const txt=['Registro viaggi Kia cee\'d 1.6 CRDi',$('tripSum').textContent,'',...rows].join('\n');
+  const btn=$('btnCopyTrips'), done=()=>{ btn.textContent='Copiato'; setTimeout(()=>btn.textContent='Copia',2000); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,()=>{});
+};
 let instSmooth=null;
 let lastT=performance.now();
 setInterval(()=>{
@@ -701,6 +785,7 @@ setInterval(()=>{
   if(lh!=null){
     state.litres+=lh*dt/3600000; state.consKm+=km;
     if(polling && tank.litres!=null){ tank.litres=Math.max(0,tank.litres-lh*dt/3600000); if((tankSaveT+=dt)>5000){ tankSaveT=0; saveTank(); } }
+    tripTick(dt,km,lh*dt/3600000);
     let inst=null;
     if(state.speed>3) inst = lh<0.05 ? 99.9 : Math.min(99.9,state.speed/lh);
     instSmooth = inst==null ? null : (instSmooth==null ? inst : instSmooth+(inst-instSmooth)*0.15);
@@ -787,7 +872,7 @@ async function connect(){
   try{
     setStatus('Scegli l\'adattatore OBD…');
     dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:SERVICES});
-    dev.addEventListener('gattserverdisconnected',()=>{ log('Adattatore scollegato'); polling=false; setRunning(false,false); setStatus('Adattatore scollegato.'); });
+    dev.addEventListener('gattserverdisconnected',()=>{ log('Adattatore scollegato'); polling=false; endTrip(); setRunning(false,false); setStatus('Adattatore scollegato.'); });
     setStatus('Connessione a '+(dev.name||'adattatore')+'…');
     const server = await dev.gatt.connect();
     log('Collegato via Bluetooth a '+(dev.name||'?'));
@@ -1070,7 +1155,7 @@ async function clearDtc(){
   if(was) poll();
 }
 function stopAll(){
-  stopDemo(); polling=false;
+  stopDemo(); polling=false; endTrip();
   if(dev&&dev.gatt.connected) dev.gatt.disconnect();
   dev=null; txChar=null; rxChar=null;
   Object.assign(state,{rpm:0,speed:0,tps:0,maf:null,map:null,fuelRate:null,load:null}); setRunning(false,false); setStatus('Fermo.');
@@ -1085,7 +1170,7 @@ const VIEWS=['cockpit','consumi','dati','diagnosi','impostazioni'];
 let currentView='cockpit';
 function showView(){
   const name=VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'cockpit';
-  currentView=name; if(name==='dati') renderData();
+  currentView=name; if(name==='dati') renderData(); if(name==='consumi') renderTrips();
   VIEWS.forEach(v=>{ $('v-'+v).hidden = v!==name; });
   document.querySelectorAll('.tabs a').forEach(a=>{ if(a.dataset.view===name) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   if(name==='cockpit') gauges.forEach(g=>g.resize());
