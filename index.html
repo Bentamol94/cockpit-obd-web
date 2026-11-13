@@ -151,7 +151,49 @@ details p{max-width:70ch}
 .skins{display:flex;gap:4px;justify-content:center;background:#0b0e11;border:1px solid var(--bezel);border-radius:999px;padding:4px;margin:0 auto;width:max-content;max-width:100%}
 .skins button{padding:6px 16px;font-size:13px;border:0;background:transparent;color:var(--dim)}
 .skins button[aria-pressed="true"]{background:#1d242b;color:var(--ink)}
-#v-cockpit[data-skin="tesla"] .tells{display:none}
+#v-cockpit[data-skin="tesla"] .tells,#v-cockpit[data-skin="guida"] .tells{display:none}
+button.icon{padding:7px 10px;line-height:0}
+button.icon svg{width:20px;height:20px;fill:currentColor}
+button.icon .vo-off{display:none}
+button.icon[aria-pressed="false"]{color:var(--dim)}
+button.icon[aria-pressed="false"] .vo-on{display:none}
+button.icon[aria-pressed="false"] .vo-off{display:inline}
+/* avvisi di guida */
+.alerts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:0}
+.alerts:empty{display:none}
+.alerts span{font-family:var(--f-disp);font-size:15px;font-weight:600;letter-spacing:.06em;padding:6px 14px;border-radius:999px;border:1px solid currentColor;background:#0b0f13}
+.alerts .cold{color:#5ab4ff} .alerts .warn{color:var(--warn)} .alerts .crit{color:var(--crit)} .alerts .info{color:var(--ok)}
+/* modalità guida essenziale */
+.guida{display:flex;flex-direction:column;gap:12px}
+.gd-screen{background:#000;border:1px solid var(--bezel);border-radius:24px;padding:20px 16px 26px;display:flex;flex-direction:column;align-items:center;gap:6px;color:#f4f7f9}
+.gd-speed{font-family:var(--f-data);font-weight:700;font-size:clamp(110px,30vw,260px);line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.gd-unit{font-family:var(--f-disp);font-size:20px;letter-spacing:.3em;color:#8a96a0;text-transform:uppercase}
+.gd-row{display:flex;align-items:center;justify-content:center;gap:clamp(20px,8vw,70px);margin-top:12px}
+.gd-cell{display:flex;flex-direction:column;align-items:center}
+.gd-cell span{font-family:var(--f-disp);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:#8a96a0}
+.gd-cell b{font-family:var(--f-data);font-size:clamp(40px,10vw,72px);color:#9fe3ff;font-variant-numeric:tabular-nums;line-height:1}
+.gd-shift{width:clamp(48px,12vw,84px);color:var(--ok);animation:shiftPulse 1s ease-in-out infinite}
+.gd-shift svg{width:100%;fill:currentColor;display:block}
+@keyframes shiftPulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){ .gd-shift{animation:none} }
+.gd-alert{min-height:1.4em;font-family:var(--f-disp);font-size:clamp(18px,4.5vw,30px);font-weight:600;letter-spacing:.05em;text-align:center}
+.gd-alert.cold{color:#5ab4ff} .gd-alert.warn{color:var(--warn)} .gd-alert.crit{color:var(--crit)} .gd-alert.info{color:var(--ok)}
+.gd-screen.hud{transform:scaleX(-1)}
+.gd-screen.hud .gd-speed{color:#7dffb0}
+.gd-tools{justify-content:center;margin-top:0}
+.gd-note{text-align:center;margin:0 auto}
+#cl-guida:fullscreen{background:#000;justify-content:center;padding:0 max(16px,env(safe-area-inset-left,0px))}
+#cl-guida:fullscreen .gd-screen{border:0;flex:1;justify-content:center}
+#cl-guida:fullscreen .gd-note{display:none}
+/* impostazioni assistenza */
+.toggles{display:grid;gap:10px;margin-top:8px}
+.tg{display:flex;align-items:center;gap:10px;color:var(--ink);font-family:var(--f-data);font-size:14px;cursor:pointer}
+.tg>span:first-of-type{flex:1;min-width:0}
+.tg input[type=checkbox]{width:22px;height:22px;accent-color:var(--needle);flex:none}
+.tg.master{font-family:var(--f-disp);font-size:17px;letter-spacing:.08em;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--bezel)}
+.tg input[type=number]{font-family:var(--f-data);font-size:15px;color:var(--ink);background:#0b0f13;border:1px solid #2a333c;border-radius:8px;padding:6px 8px;width:72px}
+.eco{font-family:var(--f-data);font-size:12px;padding:1px 7px;border-radius:999px;border:1px solid currentColor;margin-left:8px;vertical-align:2px}
+.eco.good{color:var(--ok)} .eco.mid{color:var(--warn)} .eco.bad{color:var(--crit)}
 
 /* ---- stile Tesla ---- */
 :root{--ts-bg:#e9ebee;--ts-card:#f7f8fa;--ts-ink:#171a20;--ts-dim:#7d838d;--ts-line:#d3d6dc;--ts-blue:#3e6ae1;--ts-car1:#d9dce1;--ts-car2:#fbfbfc;--ts-glass:#9aa3b0;--ts-wheel:#2b2e34;--ts-amber:#e08a00;--ts-red:#d93025;
@@ -246,6 +288,10 @@ details p{max-width:70ch}
     <button class="primary" id="btnConnect">Collega OBD</button>
     <button id="btnDemo">Demo</button>
     <button id="btnStop" disabled>Stop</button>
+    <button id="btnVoice" class="icon" type="button" aria-pressed="true" aria-label="Voce degli avvisi" title="Attiva o spegni la voce">
+      <svg class="vo-on" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+      <svg class="vo-off" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.6.2 1.4-1.4 2.2 2.2 2.2-2.2 1.4 1.4-2.2 2.2 2.2 2.2-1.4 1.4-2.2-2.2-2.2 2.2-1.4-1.4 2.2-2.2z"/></svg>
+    </button>
   </div>
 </header>
 
@@ -256,7 +302,9 @@ details p{max-width:70ch}
       <button type="button" data-skin="sport" aria-pressed="true">Sport</button>
       <button type="button" data-skin="tesla" aria-pressed="false">Tesla</button>
       <button type="button" data-skin="epoca" aria-pressed="false">Epoca</button>
+      <button type="button" data-skin="guida" aria-pressed="false">Guida</button>
     </div>
+    <div class="alerts" id="alertBar" aria-live="polite"></div>
     <div class="tells" aria-label="Spie">
       <div class="tell t-crit" id="tCoolant" title="Temperatura liquido alta"><svg viewBox="0 0 24 24"><path d="M11 2h2v9.2a4 4 0 1 1-2 0V9h-3V7h3V5h-3V3h3zM3 19c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1zm12 0c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1z"/></svg></div>
       <div class="tell t-warn" id="tEngine" title="Spia motore (codici errore)"><svg viewBox="0 0 24 24"><path d="M7 5h6v2h-2v2h4l2 2h2v-2h2v8h-2v-2h-2l-2 3H9l-2-2H5v2H3V9h2v2h2V9h2V7H7z"/></svg></div>
@@ -335,6 +383,25 @@ details p{max-width:70ch}
         <div class="ep-plate">cee'd <em>1.6 CRDi</em></div>
       </div>
       <div class="ep-dial big"><canvas id="eSpd" aria-label="Tachimetro"></canvas></div>
+    </div>
+
+    <!-- Modalità guida essenziale: solo ciò che serve, leggibile con la coda dell'occhio -->
+    <div class="guida" id="cl-guida" hidden aria-label="Modalità guida essenziale">
+      <div class="gd-screen" id="gdScreen">
+        <div class="gd-speed" id="gdSpeed">0</div>
+        <div class="gd-unit">km/h</div>
+        <div class="gd-row">
+          <div class="gd-cell"><span>marcia</span><b id="gdGear">N</b></div>
+          <div class="gd-shift" id="gdShift" hidden aria-label="Sali di marcia"><svg viewBox="0 0 24 24"><path d="M12 3 3 13h6v8h6v-8h6z"/></svg></div>
+          <div class="gd-cell"><span>giri</span><b id="gdRpm">0</b></div>
+        </div>
+        <div class="gd-alert" id="gdAlert"></div>
+      </div>
+      <div class="row gd-tools">
+        <button id="btnHud" type="button" aria-pressed="false">Specchia per HUD</button>
+        <button id="btnFs" type="button">Schermo intero</button>
+      </div>
+      <p class="note gd-note">HUD: appoggia il telefono sul cruscotto sotto il parabrezza, con la parte alta verso di te, e premi Specchia. Funziona meglio di sera.</p>
     </div>
   </section>
 
@@ -436,6 +503,20 @@ details p{max-width:70ch}
       </div>
       <p class="note">Già impostati: diesel 1582 cc, cambio manuale 6 marce con gomme 205/55 R16, serbatoio 53 l, zona rossa a 4500 giri. Omologazione: 4,1 l/100 km (24,4 km/l) nel ciclo misto.</p>
       <p class="note">Per affinare la media: fai il pieno, premi Azzera viaggio, guida, e al pieno successivo confronta i km/l dell'app con km percorsi ÷ litri messi. Se l'app segna 22 km/l e dal pieno ne risultano 19, metti +16.</p>
+    </div>
+    <div class="panel screen" id="assistPanel">
+      <h2>Assistenza alla guida</h2>
+      <div class="toggles">
+        <label class="tg master"><input type="checkbox" id="aVoice"><span>Voce attiva</span></label>
+        <label class="tg"><input type="checkbox" id="aWarn"><span>Avvisi motore a voce: temperatura alta, batteria, riserva, errori</span></label>
+        <label class="tg"><input type="checkbox" id="aCold"><span>Motore freddo a voce: giri troppo alti sotto i 70 °C</span></label>
+        <label class="tg"><input type="checkbox" id="aTurbo"><span>Raffreddamento turbo a voce prima di spegnere</span></label>
+        <label class="tg"><input type="checkbox" id="aShift"><span>Consiglio di cambiata anche a voce</span></label>
+        <label class="tg"><input type="checkbox" id="aSpeed"><span>Avviso di velocità oltre</span>
+          <input id="aSpeedVal" type="number" inputmode="numeric" min="30" max="200" step="10" value="130" aria-label="Limite di velocità in km/h"><span>km/h</span></label>
+      </div>
+      <div class="row"><button id="btnTestVoice" type="button">Prova la voce</button></div>
+      <p class="note" id="assistNote">Gli avvisi compaiono sempre sullo schermo. Con la voce attiva vengono anche letti, ma solo quando sei collegato all'auto. L'altoparlante in alto accende e spegne la voce in ogni momento.</p>
     </div>
     <div class="panel screen">
       <h2>Come collegarla all'auto</h2>
@@ -599,6 +680,11 @@ function renderSkins(){
     const html=[...t.replace('.','')].map((d,i,arr)=>`<span${i===arr.length-1?' class="dec"':''}>${d}</span>`).join('');
     if($('eOdo').innerHTML!==html) $('eOdo').innerHTML=html;
   }
+  if(skin==='guida'){
+    $('gdSpeed').textContent=Math.round(state.speed);
+    $('gdGear').textContent=$('gear').textContent;
+    $('gdRpm').textContent=Math.round(state.rpm);
+  }
   if(skin==='tesla'){
     $('tsSpeed').textContent=Math.round(state.speed);
     $('tsRpm').textContent=Math.round(state.rpm).toLocaleString('it-IT');
@@ -628,13 +714,14 @@ function renderSkins(){
 function teslaNight(){ const h=new Date().getHours(); $('cl-tesla').classList.toggle('night', h>=19||h<7); }
 teslaNight(); setInterval(teslaNight,60000);
 // ---------- Scelta dello stile ----------
-const SKINS=['sport','tesla','epoca'];
+const SKINS=['sport','tesla','epoca','guida'];
 function setSkin(name){
   if(!SKINS.includes(name)) name='sport';
   $('v-cockpit').dataset.skin=name;
   $('cl-sport').hidden = name!=='sport';
   $('cl-tesla').hidden = name!=='tesla';
   $('cl-epoca').hidden = name!=='epoca';
+  $('cl-guida').hidden = name!=='guida';
   document.querySelectorAll('.skins button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.skin===name)));
   try{ localStorage.setItem('cockpit-skin',name); }catch(e){}
   requestAnimationFrame(()=>{ gauges.forEach(g=>g.resize()); renderSkins(); });
@@ -716,7 +803,7 @@ let trips=[], tripRec=null, tripSaveT=0;
 try{ trips=JSON.parse(localStorage.getItem(TRIPS_KEY)||'[]'); if(!Array.isArray(trips)) trips=[]; }catch(e){ trips=[]; }
 function saveTrips(){ try{ localStorage.setItem(TRIPS_KEY,JSON.stringify(trips.slice(0,TRIPS_MAX))); }catch(e){} }
 function saveCurrent(){ try{ if(tripRec) localStorage.setItem(CUR_KEY,JSON.stringify(tripRec)); else localStorage.removeItem(CUR_KEY); }catch(e){} }
-function startTrip(){ const now=Date.now(); tripRec={start:now,end:now,km:0,litres:0,vmax:0,movingMs:0,lastActive:now,coolMax:null}; renderTrips(); }
+function startTrip(){ const now=Date.now(); tripRec={start:now,end:now,km:0,litres:0,vmax:0,movingMs:0,lastActive:now,coolMax:null,hiRpmMs:0,idleMs:0,hardAcc:0,_v0:state.speed,_t0:now,_hard:false}; renderTrips(); }
 function endTrip(){
   if(!tripRec) return;
   const t=tripRec; tripRec=null; saveCurrent();
@@ -734,6 +821,10 @@ function tripTick(dt,km,lhDelta){
   tripRec.km+=km; tripRec.litres+=lhDelta; tripRec.end=now;
   tripRec.vmax=Math.max(tripRec.vmax,state.speed);
   if(state.speed>3) tripRec.movingMs+=dt;
+  if(state.speed>3 && state.rpm>3000) tripRec.hiRpmMs+=dt;
+  if(state.speed<1 && state.rpm>400) tripRec.idleMs+=dt;
+  // accelerazione brusca: più di 8 km/h guadagnati in un secondo
+  if(now-tripRec._t0>=1000){ const a=(state.speed-tripRec._v0)/((now-tripRec._t0)/1000); const h=a>8; if(h&&!tripRec._hard) tripRec.hardAcc++; tripRec._hard=h; tripRec._v0=state.speed; tripRec._t0=now; }
   if(state.coolant!=null) tripRec.coolMax=Math.max(tripRec.coolMax??-99,state.coolant);
   if(state.rpm>300) tripRec.lastActive=now;
   if(now-tripRec.lastActive>90000){ tripRec.end=tripRec.lastActive; endTrip(); return; }
@@ -743,6 +834,15 @@ const fmtDate=ms=>new Date(ms).toLocaleDateString('it-IT',{weekday:'short',day:'
 const fmtTime=ms=>new Date(ms).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 const fmtDur=ms=>{ const m=Math.round(ms/60000); return m<60 ? m+' min' : Math.floor(m/60)+' h '+(m%60)+' min'; };
 const kml=t=>t.litres>0.01 ? t.km/t.litres : null;
+function ecoScore(t){
+  if(t.hardAcc==null || t.km<1) return null;
+  const mov=Math.max(1,t.movingMs), tot=Math.max(1,t.end-t.start);
+  let s=100;
+  s-=Math.min(35,t.hiRpmMs/mov*200);              // tempo sopra i 3000 giri
+  s-=Math.min(35,t.hardAcc/t.km*30);              // accelerazioni brusche per km
+  s-=Math.min(20,Math.max(0,t.idleMs/tot-0.15)*100); // troppo minimo da fermo
+  return Math.max(0,Math.round(s));
+}
 function tripLine(t){
   const k=kml(t), avgSp=t.movingMs>60000 ? t.km/(t.movingMs/3600000) : null;
   return {when:fmtDate(t.start)+' · '+fmtTime(t.start)+'–'+fmtTime(t.end),
@@ -758,7 +858,7 @@ function renderTrips(){
     $('tripSum').innerHTML='Ultimi 30 giorni: <b>'+last.length+'</b> '+(last.length===1?'viaggio':'viaggi')+' · <b>'+nf(km)+'</b> km · <b>'+nf(l,1)+'</b> l · media <b>'+(l>0.05?nf(km/l,1):'--,-')+'</b> km/l';
   }
   $('tripNote').hidden = list.length>0;
-  const html=list.slice(0,60).map((t,i)=>{ const r=tripLine(t); return `<div class="trow${t===tripRec?' live':''}"><div class="when">${r.when}</div><div class="kml">${r.kml}</div><div class="det">${r.det}</div></div>`; }).join('');
+  const html=list.slice(0,60).map((t,i)=>{ const r=tripLine(t), e=ecoScore(t); const eco=e==null?'':`<span class="eco ${e>=80?'good':e>=60?'mid':'bad'}">eco ${e}</span>`; return `<div class="trow${t===tripRec?' live':''}"><div class="when">${r.when}${eco}</div><div class="kml">${r.kml}</div><div class="det">${r.det}</div></div>`; }).join('');
   if($('tripList').innerHTML!==html) $('tripList').innerHTML=html;
 }
 setInterval(()=>{ if(tripRec && currentView==='consumi') renderTrips(); },2000);
@@ -770,7 +870,7 @@ $('btnClearTrips').onclick=()=>{
   clearTripsArmed=false; $('btnClearTrips').textContent='Svuota'; trips=[]; saveTrips(); renderTrips();
 };
 $('btnCopyTrips').onclick=()=>{
-  const rows=trips.map(t=>{ const r=tripLine(t); return r.when+' — '+r.kml+' — '+r.det; });
+  const rows=trips.map(t=>{ const r=tripLine(t), e=ecoScore(t); return r.when+' — '+r.kml+(e==null?'':' — eco '+e)+' — '+r.det; });
   const txt=['Registro viaggi Kia cee\'d 1.6 CRDi',$('tripSum').textContent,'',...rows].join('\n');
   const btn=$('btnCopyTrips'), done=()=>{ btn.textContent='Copiato'; setTimeout(()=>btn.textContent='Copia',2000); };
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,()=>{});
@@ -799,7 +899,8 @@ setInterval(()=>{
   // senza livello dalla centralina il gasolio arriva dal serbatoio stimato (non in demo)
   if(!demoTimer && !state.fuelObd) state.fuel = tank.litres==null ? null : tank.litres/TANK*100;
   const autonomyKmL = avg!=null && state.consKm>2 ? avg : 20; // prima di 2 km usa una media reale tipica del 1.6 CRDi
-  $('vRange').textContent = state.fuel==null ? '--- km' : Math.round(state.fuel/100*TANK*autonomyKmL)+' km';
+  state.rangeKm = state.fuel==null ? null : Math.round(state.fuel/100*TANK*autonomyKmL);
+  $('vRange').textContent = state.rangeKm==null ? '--- km' : state.rangeKm+' km';
   $('vSrc').textContent = 'fonte: '+src;
   const tl = state.fuel==null ? null : state.fuel/100*TANK;
   $('vTank').textContent = tl==null ? '-- l' : tl.toFixed(1).replace('.',',')+' l';
@@ -926,6 +1027,7 @@ async function connect(){
     log('Protocollo dell\'auto: '+PROTO_NAMES[found]);
     try{ localStorage.setItem('cockpit-proto',found); }catch(e){}
     setRunning(true,true); setStatus('Collegato a '+(dev.name||'adattatore OBD'),'live');
+    lastDtc=null; sawCold=false; warmSaid=false; hardMs=0; turboCd=null;
     Object.assign(state,{pedalOk:false,maf:null,map:null,fuelRate:null,fuelObd:false}); resetTrip();
     info.proto=PROTO_NAMES[found];
     await discoverPids();
@@ -1097,6 +1199,7 @@ const PIDS=[
   {pid:'49',f:b=>{ state.tps=b[0]*100/255; state.pedalOk=true; }, fast:true},
   {pid:'11',f:b=>{ if(!state.pedalOk) state.tps=b[0]*100/255; }, fast:true},
   {pid:'04',f:b=>state.load=b[0]*100/255},
+  {pid:'01',f:b=>state.dtc=b[0]&0x7f},
   {pid:'05',f:b=>state.coolant=b[0]-40},
   {pid:'2F',f:b=>{ state.fuel=b[0]*100/255; state.fuelObd=true; }},
   {pid:'0F',f:b=>state.iat=b[0]-40},
@@ -1165,6 +1268,122 @@ $('btnDemo').onclick=startDemo;
 $('btnStop').onclick=stopAll;
 $('btnDtc').onclick=()=>readDtc(false);
 $('btnClear').onclick=clearDtc;
+// ---------- Assistenza alla guida e avvisi vocali ----------
+const AS={voice:true,warn:true,cold:true,turbo:true,shift:false,speed:false,speedVal:130};
+try{ Object.assign(AS,JSON.parse(localStorage.getItem('cockpit-assist')||'{}')); }catch(e){}
+function saveAS(){ try{ localStorage.setItem('cockpit-assist',JSON.stringify(AS)); }catch(e){} }
+const hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+let itVoice=null;
+function pickVoice(){ try{ const v=speechSynthesis.getVoices(); itVoice=v.find(x=>/^it/i.test(x.lang))||null; }catch(e){} }
+if(hasTTS){ pickVoice(); try{ speechSynthesis.onvoiceschanged=pickVoice; }catch(e){} }
+function say(text,force){
+  if(!hasTTS || (!AS.voice && !force)) return;
+  try{ const u=new SpeechSynthesisUtterance(text); u.lang='it-IT'; if(itVoice) u.voice=itVoice; u.rate=1.03; speechSynthesis.speak(u); }catch(e){}
+}
+// a voce solo con l'auto collegata: in demo gli avvisi restano visivi
+const speakLive=t=>{ if(polling) say(t); };
+let audioCtx=null;
+function beep(){
+  if(!polling) return;
+  try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.22].forEach(d=>{ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=988; g.gain.value=0.18; o.connect(g); g.connect(audioCtx.destination); o.start(audioCtx.currentTime+d); o.stop(audioCtx.currentTime+d+0.14); });
+  }catch(e){}
+}
+// un avviso scatta quando la condizione diventa vera, poi tace per "pausa" millisecondi
+const alertSt={};
+function edge(key,cond,pause,fn){
+  const s=alertSt[key]||(alertSt[key]={on:false,last:0}), now=Date.now();
+  if(cond && !s.on){ s.on=true; if(now-s.last>pause){ s.last=now; fn(); } }
+  else if(!cond) s.on=false;
+}
+let lastDtc=null, sawCold=false, warmSaid=false, hardMs=0, stoppedMs=0, turboCd=null, turboStart=0, speedArmed=true, speedLast=0;
+function assistTick(){
+  const running=state.rpm>400, now=Date.now(), chips=[];
+  const g=parseInt($('gear').textContent,10);
+  // motore freddo
+  const cold = running && state.coolant!=null && state.coolant<70;
+  if(cold){ sawCold=true; chips.push(['cold','Motore freddo · '+Math.round(state.coolant)+' °C · max 2500 giri']); }
+  edge('coldRev', cold && state.rpm>2600, 90000, ()=>{ if(AS.cold) speakLive('Motore ancora freddo, tieni i giri sotto i 2500'); });
+  if(sawCold && !warmSaid && running && state.coolant!=null && state.coolant>=70){ warmSaid=true; if(AS.cold) speakLive('Motore in temperatura'); }
+  // temperatura alta
+  const hot = state.coolant!=null && state.coolant>=110;
+  if(hot) chips.push(['crit','Temperatura motore alta']);
+  edge('hot', hot, 180000, ()=>{ if(AS.warn) speakLive('Attenzione, temperatura del motore alta. Fermati appena puoi'); });
+  // batteria (solo a motore acceso, quando l'alternatore dovrebbe caricare)
+  const lowBatt = running && state.batt!=null && state.batt<12.8;
+  if(lowBatt) chips.push(['crit','Batteria '+state.batt.toFixed(1).replace('.',',')+' V: l\'alternatore non carica']);
+  edge('batt', lowBatt, 300000, ()=>{ if(AS.warn) speakLive('Tensione della batteria bassa, l\'alternatore potrebbe non caricare'); });
+  // riserva
+  const reserve = state.rangeKm!=null && state.rangeKm<60;
+  if(reserve) chips.push(['warn','Riserva · '+state.rangeKm+' km']);
+  edge('reserve', reserve, 600000, ()=>{ if(AS.warn) speakLive('Riserva: autonomia circa '+state.rangeKm+' chilometri'); });
+  // errori motore
+  if(polling){
+    if(lastDtc===null){ lastDtc=state.dtc; if(state.dtc>0 && AS.warn) speakLive('Attenzione: '+state.dtc+(state.dtc===1?' errore memorizzato':' errori memorizzati')+' nella centralina'); }
+    else if(state.dtc>lastDtc){ if(AS.warn) speakLive('Nuovo errore motore rilevato. Controlla la scheda Diagnosi'); lastDtc=state.dtc; }
+    else lastDtc=state.dtc;
+  }
+  if(state.dtc>0) chips.push(['warn','Errori motore: '+state.dtc]);
+  // turbo: guida impegnativa (carico alto o autostrada) e poi sosta col motore acceso
+  const hard = (state.load!=null && state.load>70) || state.speed>110;
+  hardMs = hard ? Math.min(300000,hardMs+500) : Math.max(0,hardMs-125);
+  stoppedMs = (running && state.speed<1) ? stoppedMs+500 : 0;
+  if(state.speed>=3) turboCd=null;
+  if(turboCd==null && stoppedMs>=3000 && hardMs>=60000){
+    turboCd=Math.round(Math.max(30,Math.min(90,hardMs/2000))); turboStart=now;
+    if(AS.turbo) speakLive('Turbo caldo: lascia il motore al minimo ancora '+turboCd+' secondi prima di spegnere');
+  }
+  if(turboCd!=null){
+    const left=Math.ceil(turboCd-(now-turboStart)/1000);
+    if(left>0) chips.push(['info','Turbo: attendi '+left+' s prima di spegnere']);
+    else { turboCd=null; hardMs=0; if(AS.turbo) speakLive('Turbo raffreddato, puoi spegnere'); }
+  }
+  // consiglio di cambiata per consumare meno
+  const shift = running && state.speed>15 && g>=1 && g<6 && state.rpm>2200 && (state.tps==null || state.tps<60) && !cold;
+  $('gdShift').hidden=!shift;
+  if(shift) chips.push(['info','Sali di marcia ▲']);
+  edge('shift', shift, 20000, ()=>{ if(AS.shift) speakLive('Cambia marcia'); });
+  // limite di velocità
+  if(AS.speed){
+    const over=state.speed>AS.speedVal;
+    if(over) chips.push(['crit','Oltre i '+AS.speedVal+' km/h']);
+    if(over && speedArmed && now-speedLast>30000){ speedArmed=false; speedLast=now; beep(); speakLive('Velocità oltre '+AS.speedVal); }
+    if(state.speed<AS.speedVal-3) speedArmed=true;
+  }
+  // mostra
+  const html=chips.map(([k,t])=>`<span class="${k}">${t}</span>`).join('');
+  if($('alertBar').innerHTML!==html) $('alertBar').innerHTML=html;
+  const top=chips.find(c=>c[0]==='crit')||chips.find(c=>c[0]==='warn')||chips.find(c=>c[0]==='cold')||chips[0];
+  $('gdAlert').className='gd-alert'+(top?' '+top[0]:''); $('gdAlert').textContent=top?top[1]:'';
+}
+setInterval(assistTick,500);
+// impostazioni
+const AS_MAP={aVoice:'voice',aWarn:'warn',aCold:'cold',aTurbo:'turbo',aShift:'shift',aSpeed:'speed'};
+function syncAS(){
+  for(const id in AS_MAP) $(id).checked=!!AS[AS_MAP[id]];
+  $('aSpeedVal').value=AS.speedVal;
+  $('btnVoice').setAttribute('aria-pressed',String(!!AS.voice));
+  $('btnVoice').title = AS.voice ? 'Voce attiva: tocca per spegnerla' : 'Voce spenta: tocca per attivarla';
+}
+for(const id in AS_MAP) $(id).addEventListener('change',()=>{ AS[AS_MAP[id]]=$(id).checked; saveAS(); syncAS(); if(id==='aVoice'&&AS.voice) say('Voce attiva',true); });
+$('aSpeedVal').addEventListener('change',()=>{ AS.speedVal=Math.max(30,Math.min(200,Math.round(+$('aSpeedVal').value||130))); saveAS(); syncAS(); });
+$('btnVoice').onclick=()=>{ AS.voice=!AS.voice; saveAS(); syncAS(); if(AS.voice) say('Voce attiva',true); else if(hasTTS) try{ speechSynthesis.cancel(); }catch(e){} };
+$('btnTestVoice').onclick=()=>{ if(!hasTTS){ $('assistNote').textContent='Questo browser non ha la sintesi vocale: gli avvisi restano solo sullo schermo.'; return; } say('Avvisi vocali pronti. Buon viaggio',true); };
+if(!hasTTS) $('assistNote').textContent='Questo browser non ha la sintesi vocale: gli avvisi compaiono solo sullo schermo.';
+syncAS();
+// HUD e schermo intero
+let hudOn=false; try{ hudOn=localStorage.getItem('cockpit-hud')==='1'; }catch(e){}
+function syncHud(){ $('gdScreen').classList.toggle('hud',hudOn); $('btnHud').setAttribute('aria-pressed',String(hudOn)); $('btnHud').textContent=hudOn?'Togli specchio':'Specchia per HUD'; }
+$('btnHud').onclick=()=>{ hudOn=!hudOn; try{ localStorage.setItem('cockpit-hud',hudOn?'1':'0'); }catch(e){} syncHud(); };
+syncHud();
+$('btnFs').onclick=async()=>{
+  try{
+    if(document.fullscreenElement){ await document.exitFullscreen(); return; }
+    await $('cl-guida').requestFullscreen();
+    try{ await screen.orientation.lock('landscape'); }catch(e){}
+  }catch(e){ $('btnFs').textContent='Non disponibile qui'; setTimeout(()=>$('btnFs').textContent='Schermo intero',2500); }
+};
+document.addEventListener('fullscreenchange',()=>{ $('btnFs').textContent=document.fullscreenElement?'Esci':'Schermo intero'; });
 // ---------- Finestre ----------
 const VIEWS=['cockpit','consumi','dati','diagnosi','impostazioni'];
 let currentView='cockpit';
