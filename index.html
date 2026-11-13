@@ -15,8 +15,8 @@
   --f-disp:"Saira Condensed","Arial Narrow",sans-serif; --f-data:"B612 Mono",ui-monospace,monospace;
   color-scheme:dark;
 }
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-disp);margin:0;
+html{height:100%}
+body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--f-disp);margin:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   padding-block:0 calc(76px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;
@@ -100,6 +100,27 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .carbody{grid-column:2;grid-row:1/3;height:150px;border:2px solid #2a333c;border-radius:30px 30px 22px 22px;position:relative}
 .carbody::before{content:"";position:absolute;inset:26px 8px auto;height:30px;border:1px solid #2a333c;border-radius:10px 10px 4px 4px}
 .tyre-note{text-align:center;margin-top:8px}
+.tank{display:grid;gap:10px;margin-top:4px}
+.tank .bar{grid-template-columns:70px 1fr 70px}
+.tank-range{font-family:var(--f-data);font-size:15px;color:var(--dim)}
+.tank-range b{color:var(--lcd);font-size:18px}
+.tank-actions{align-items:end}
+.addl{display:grid;gap:4px;font-family:var(--f-disp);letter-spacing:.12em;font-size:12px;text-transform:uppercase;color:var(--dim)}
+.addl input{font-family:var(--f-data);font-size:15px;color:var(--ink);background:#0b0f13;border:1px solid #2a333c;border-radius:8px;padding:8px 10px;width:96px;box-sizing:border-box}
+.addl input:focus-visible{outline:2px solid var(--glow);outline-offset:1px}
+.info{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;margin:6px 0 0}
+.info dt{font-family:var(--f-disp);letter-spacing:.12em;font-size:12px;text-transform:uppercase;color:var(--dim);align-self:center}
+.info dd{margin:0;font-family:var(--f-data);font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.list-head h2{margin:0}
+.list-head button{padding:6px 14px;font-size:13px}
+.dlist{display:grid;margin-top:10px}
+.drow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:9px 2px;border-top:1px solid var(--bezel);align-items:baseline}
+.drow span{color:var(--ink);font-family:var(--f-disp);font-size:16px;letter-spacing:.03em;min-width:0}
+.drow span small{color:var(--dim);font-family:var(--f-data);font-size:11px;margin-left:6px}
+.drow b{font-family:var(--f-data);font-size:15px;color:var(--lcd);font-variant-numeric:tabular-nums;text-align:right}
+.drow b.na{color:var(--dim);font-weight:400}
+.drow.fresh b{transition:none}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
 button{font-family:var(--f-disp);font-weight:600;font-size:16px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink);background:#151b21;border:1px solid #2a333c;border-radius:999px;padding:10px 20px;cursor:pointer}
@@ -231,7 +252,6 @@ details p{max-width:70ch}
       <div class="tell t-crit" id="tCoolant" title="Temperatura liquido alta"><svg viewBox="0 0 24 24"><path d="M11 2h2v9.2a4 4 0 1 1-2 0V9h-3V7h3V5h-3V3h3zM3 19c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1zm12 0c1.5 0 1.5 1 3 1s1.5-1 3-1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1z"/></svg></div>
       <div class="tell t-warn" id="tEngine" title="Spia motore (codici errore)"><svg viewBox="0 0 24 24"><path d="M7 5h6v2h-2v2h4l2 2h2v-2h2v8h-2v-2h-2l-2 3H9l-2-2H5v2H3V9h2v2h2V9h2V7H7z"/></svg></div>
       <div class="tell t-warn" id="tFuel" title="Riserva carburante"><svg viewBox="0 0 24 24"><path d="M4 3h9v8h1a2 2 0 0 1 2 2v4a1 1 0 0 0 2 0V9l-2-2 1.4-1.4L20 8.2V17a3 3 0 0 1-6 0v-4h-1v8H4zm2 2v5h5V5z"/></svg></div>
-      <div class="tell t-warn" id="tTyre" title="Pressione gomme bassa"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 7 14.7l-1.5-1.3A7 7 0 1 0 6.5 16.4L5 17.7A9 9 0 0 1 12 3zm-1 4h2v6h-2zm0 8h2v2h-2zM4 20h16v2H4z"/></svg></div>
       <div class="tell t-crit" id="tBatt" title="Tensione batteria anomala"><svg viewBox="0 0 24 24"><path d="M6 5h3v2h6V5h3v2h3v12H3V7h3zm-1 4v8h14V9zm1 3h4v2H6zm8 0h1.5v-1.5h1V12H18v2h-1.5v1.5h-1V14H14z"/></svg></div>
       <div class="tell t-ok" id="tLink" title="Collegamento OBD attivo"><svg viewBox="0 0 24 24"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.5-3.5a3 3 0 0 1 4.2 4.2l-2 2-1.4-1.4 2-2a1 1 0 0 0-1.4-1.4l-3.5 3.5a1 1 0 0 1-1.4 0zm2.8-2.8a1 1 0 0 1 0 1.4l-3.5 3.5a3 3 0 0 1-4.2-4.2l2-2 1.4 1.4-2 2a1 1 0 0 0 1.4 1.4l3.5-3.5a1 1 0 0 1 1.4 0z"/></svg></div>
     </div>
@@ -274,7 +294,6 @@ details p{max-width:70ch}
           <div class="ts-chips" id="tsChips"></div>
         </div>
         <div class="ts-car">
-          <span class="ts-ty fl" id="tsFL">--</span><span class="ts-ty fr" id="tsFR">--</span>
           <svg viewBox="0 0 120 240" aria-hidden="true">
             <defs><linearGradient id="tsBody" x1="0" x2="1"><stop offset="0" stop-color="var(--ts-car1)"/><stop offset=".5" stop-color="var(--ts-car2)"/><stop offset="1" stop-color="var(--ts-car1)"/></linearGradient></defs>
             <rect x="12" y="44" width="10" height="36" rx="4" fill="var(--ts-wheel)"/><rect x="98" y="44" width="10" height="36" rx="4" fill="var(--ts-wheel)"/>
@@ -285,7 +304,6 @@ details p{max-width:70ch}
             <path d="M36 172 Q60 178 84 172 L88 194 Q60 202 32 194 Z" fill="var(--ts-glass)"/>
             <ellipse cx="14" cy="96" rx="6" ry="4" fill="var(--ts-car1)"/><ellipse cx="106" cy="96" rx="6" ry="4" fill="var(--ts-car1)"/>
           </svg>
-          <span class="ts-ty rl" id="tsRL">--</span><span class="ts-ty rr" id="tsRR">--</span>
         </div>
       </div>
       <div class="ts-stats">
@@ -333,21 +351,39 @@ details p{max-width:70ch}
       </div>
       <div class="row"><button id="btnReset" type="button">Azzera viaggio</button></div>
     </div>
+    <div class="panel screen">
+      <h2>Serbatoio</h2>
+      <div class="tank">
+        <div class="bar"><span>GASOLIO</span><div class="track" id="bTank"></div><em id="vTank">-- l</em></div>
+        <div class="tank-range">Autonomia <b id="vTankRange">--- km</b></div>
+      </div>
+      <div class="row tank-actions">
+        <button id="btnFull" type="button" class="primary">Ho fatto il pieno</button>
+        <label for="inAddL" class="addl">Litri messi
+          <input id="inAddL" type="number" inputmode="decimal" min="1" max="53" step="0.5" placeholder="20"></label>
+        <button id="btnAddFuel" type="button">Aggiungi</button>
+      </div>
+      <p class="note" id="tankNote">La cee'd non comunica il livello del gasolio via OBD. Premi "Ho fatto il pieno" dopo il rifornimento: l'app scala il gasolio che la centralina misura mentre guidi.</p>
+    </div>
   </section>
 
-  <!-- ===== GOMME ===== -->
-  <section class="view" id="v-gomme" aria-label="Gomme" hidden>
+  <!-- ===== DATI ===== -->
+  <section class="view" id="v-dati" aria-label="Dati" hidden>
     <div class="panel screen">
-      <h2>Pressione gomme</h2>
-      <div class="tyres">
-        <div class="tyre" id="tyFL"><small>ANT. SX</small><b>--</b><small>bar</small></div>
-        <div class="carbody" aria-hidden="true"></div>
-        <div class="tyre" id="tyFR"><small>ANT. DX</small><b>--</b><small>bar</small></div>
-        <div class="tyre" id="tyRL"><small>POST. SX</small><b>--</b><small>bar</small></div>
-        <div class="tyre" id="tyRR"><small>POST. DX</small><b>--</b><small>bar</small></div>
-      </div>
-      <div class="tyre-note" id="tyNote">In attesa del collegamento</div>
-      <p class="note">Riferimento cee'd con 205/55 R16: circa 2,3 bar a freddo. Giallo sotto 2,0 bar, rosso sotto 1,7.</p>
+      <h2>Identità dell'auto</h2>
+      <dl class="info" id="infoList">
+        <dt>Telaio (VIN)</dt><dd id="iVin">--</dd>
+        <dt>Centralina</dt><dd id="iEcu">--</dd>
+        <dt>Calibrazione</dt><dd id="iCal">--</dd>
+        <dt>Protocollo</dt><dd id="iProto">--</dd>
+        <dt>Adattatore</dt><dd id="iElm">--</dd>
+        <dt>Valori disponibili</dt><dd id="iCount">--</dd>
+      </dl>
+    </div>
+    <div class="panel screen">
+      <div class="list-head"><h2>Dati in tempo reale</h2><button id="btnCopyData" type="button">Copia elenco</button></div>
+      <p class="note" id="dataNote">Collega l'adattatore a motore acceso: qui compaiono tutti i valori che la centralina mette a disposizione, aggiornati di continuo.</p>
+      <div class="dlist" id="dataList"></div>
     </div>
   </section>
 
@@ -398,7 +434,7 @@ details p{max-width:70ch}
 <nav class="tabs" aria-label="Finestre">
   <a href="#cockpit" data-view="cockpit"><svg viewBox="0 0 24 24"><path d="M12 4a10 10 0 0 1 10 10v4H2v-4A10 10 0 0 1 12 4zm0 2a8 8 0 0 0-8 8v2h16v-2a8 8 0 0 0-8-8zm4.2 3.4 1.4 1.4-4.2 4.2a2 2 0 1 1-1.4-1.4z"/></svg>Cockpit</a>
   <a href="#consumi" data-view="consumi"><svg viewBox="0 0 24 24"><path d="M4 3h9v8h1a2 2 0 0 1 2 2v4a1 1 0 0 0 2 0V9l-2-2 1.4-1.4L20 8.2V17a3 3 0 0 1-6 0v-4h-1v8H4zm2 2v5h5V5z"/></svg>Consumi</a>
-  <a href="#gomme" data-view="gomme"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>Gomme</a>
+  <a href="#dati" data-view="dati"><svg viewBox="0 0 24 24"><path d="M4 5h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zM4 17h2v2H4zm4 0h12v2H8z"/></svg>Dati</a>
   <a href="#diagnosi" data-view="diagnosi"><svg viewBox="0 0 24 24"><path d="M7 5h6v2h-2v2h4l2 2h2v-2h2v8h-2v-2h-2l-2 3H9l-2-2H5v2H3V9h2v2h2V9h2V7H7z"/></svg>Diagnosi</a>
   <a href="#impostazioni" data-view="impostazioni"><svg viewBox="0 0 24 24"><path d="M10.3 2h3.4l.5 2.6 1.9.8 2.2-1.5 2.4 2.4-1.5 2.2.8 1.9 2.6.5v3.4l-2.6.5-.8 1.9 1.5 2.2-2.4 2.4-2.2-1.5-1.9.8-.5 2.6h-3.4l-.5-2.6-1.9-.8-2.2 1.5-2.4-2.4 1.5-2.2-.8-1.9L2 13.7v-3.4l2.6-.5.8-1.9-1.5-2.2 2.4-2.4 2.2 1.5 1.9-.8zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>Impostazioni</a>
 </nav>
@@ -534,7 +570,6 @@ function render(){
   $('tFuel').classList.toggle('on',state.fuel!=null&&state.fuel<12);
   $('tBatt').classList.toggle('on',state.batt!=null&&(state.batt<11.8||state.batt>15.2));
   $('tEngine').classList.toggle('on',state.dtc>0);
-  renderTyres();
   renderSkins();
 }
 // ---------- Aggiornamento stili Tesla ed epoca ----------
@@ -564,16 +599,10 @@ function renderSkins(){
     $('tsFuelBar').parentElement.classList.toggle('low', state.fuel!=null&&state.fuel<12);
     $('tsRange').textContent=$('vRange').textContent;
     $('tsClock').textContent=$('clock').textContent;
-    ['tsFL','tsFR','tsRL','tsRR'].forEach((id,i)=>{
-      const p=state.tyres[i], el=$(id);
-      el.innerHTML = p==null ? '--<small>bar</small>' : fmtIt(p,1)+'<small>bar</small>';
-      el.classList.toggle('crit',p!=null&&p<TYRE_CRIT); el.classList.toggle('warn',p!=null&&p>=TYRE_CRIT&&p<TYRE_LOW);
-    });
     const chips=[];
     if(state.dtc>0) chips.push(['warn','Controllo motore: '+state.dtc+' errori']);
     if(state.coolant!=null&&state.coolant>=110) chips.push(['crit','Temperatura motore alta']);
     if(state.fuel!=null&&state.fuel<12) chips.push(['warn','Riserva carburante']);
-    if(state.tyreWarn) chips.push(['warn','Pressione gomme bassa']);
     if(state.batt!=null&&(state.batt<11.8||state.batt>15.2)) chips.push(['crit','Tensione batteria anomala']);
     const html=chips.map(([k,t])=>`<span class="${k}">${t}</span>`).join('');
     if($('tsChips').innerHTML!==html) $('tsChips').innerHTML=html;
@@ -595,55 +624,6 @@ function setSkin(name){
   requestAnimationFrame(()=>{ gauges.forEach(g=>g.resize()); renderSkins(); });
 }
 document.querySelectorAll('.skins button').forEach(b=>b.addEventListener('click',()=>setSkin(b.dataset.skin)));
-// ---------- Pressione gomme ----------
-// Kia cee'd 1.6 CRDi con 205/55 R16: pressione consigliata circa 2,3 bar a vettura scarica
-const TYRE_LOW=2.0, TYRE_CRIT=1.7, TYRE_IDS=['tyFL','tyFR','tyRL','tyRR'];
-state.tyres=[null,null,null,null]; state.tyreTemps=[null,null,null,null]; state.tyreNote='In attesa del collegamento';
-function renderTyres(){
-  let warn=false;
-  TYRE_IDS.forEach((id,i)=>{
-    const el=$(id), p=state.tyres[i], t=state.tyreTemps[i];
-    el.querySelector('b').textContent = p==null ? '--' : p.toFixed(2);
-    el.querySelectorAll('small')[1].textContent = p==null ? 'bar' : (t!=null ? 'bar · '+Math.round(t)+' °C' : 'bar');
-    el.classList.toggle('crit', p!=null && p<TYRE_CRIT);
-    el.classList.toggle('low', p!=null && p>=TYRE_CRIT && p<TYRE_LOW);
-    if(p!=null && p<TYRE_LOW) warn=true;
-  });
-  $('tyNote').textContent=state.tyreNote;
-  state.tyreWarn=warn;
-}
-// risposta UDS su più frame dell'ELM327 ("0:...", "1:...") → stringa esadecimale unica
-function mergeFrames(r){
-  return r.split(/[\r\n]+/).map(l=>l.trim()).filter(l=>l && !/^[0-9A-F]{3}$/i.test(l))
-    .map(l=>l.replace(/^[0-9A-F]:/i,'')).join('').replace(/[^0-9A-F]/gi,'').toUpperCase();
-}
-// Centralina TPMS Hyundai/Kia (indirizzo 7A0, richiesta 22 C00B): pressione in passi da 0,2 psi, temperatura −50 °C.
-// Risponde solo se l'auto ha i sensori dentro le ruote; con il sistema indiretto (ABS) il dato non esiste.
-let tyreTries=0, tyreSupported=null;
-async function readTyres(){
-  if(tyreSupported===false) return;
-  await cmd('ATSH7A0');
-  const r=await cmd('22C00B',3000);
-  await cmd('ATSH7DF');
-  const hex=mergeFrames(r), i=hex.indexOf('62C00B');
-  if(i<0){
-    tyreTries++;
-    if(tyreTries>=3){ tyreSupported=false; state.tyreNote='Questa auto non fornisce la pressione delle gomme via OBD (sistema TPMS indiretto o centralina non raggiungibile).'; }
-    else state.tyreNote='Cerco la centralina pressione gomme…';
-    return;
-  }
-  const b=k=>parseInt(hex.substr(i+k*2,2),16);
-  const PSI_TO_BAR=0.0689476;
-  [7,11,15,19].forEach((off,w)=>{
-    const p=b(off), t=b(off+1);
-    // FL, FR, RR, RL nell'ordine della centralina → riordino in FL, FR, RL, RR
-    const slot=[0,1,3,2][w];
-    state.tyres[slot] = isNaN(p)||p===0||p===255 ? null : p*0.2*PSI_TO_BAR;
-    state.tyreTemps[slot] = isNaN(t)||t===255 ? null : t-50;
-  });
-  tyreSupported=true;
-  state.tyreNote='Dati dai sensori nelle ruote · aggiornati '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
 // Kia cee'd 1.6 CRDi 6 marce: rapporti 3.636 / 1.962 / 1.189 / 0.844 / 0.702 / 0.596, finale 3.615,
 // gomma 205/55 R16 (circonferenza di rotolamento ~1.95 m) → km/h ogni 1000 giri
 const RATIOS=[0,8.9,16.5,27.2,38.3,46.1,54.3];
@@ -674,8 +654,8 @@ segBar($('bInst'),20);
 function fuelLh(){
   const f=FUELS[cfg.fuel], k=1-cfg.corr/100;
   // rilascio in marcia: iniezione tagliata
+  if(state.fuelRate!=null) return {lh:state.fuelRate*k,src:'portata gasolio letta dalla centralina'};
   if(state.tps!=null && state.tps<2 && state.rpm>1300 && state.speed>15) return {lh:0,src:'taglio iniezione in rilascio'};
-  if(state.fuelRate!=null) return {lh:state.fuelRate*k,src:'PID 5E (portata carburante)'};
   // Diesel: lavora in forte eccesso d'aria, quindi dall'aria aspirata non si ricava il gasolio.
   // Si stima la quantità iniettata dal carico: ~2 mg/colpo al minimo, ~36 mg a pieno carico
   // (taratura sui 81 kW e sui ~220 g/kWh di un 1.6 CRDi), 4 cilindri.
@@ -696,6 +676,21 @@ function fuelLh(){
   return {lh:maf/(f.afr*lambda)/f.dens*3600*k, src: cfg.fuel==='diesel' ? src+' (miscela diesel stimata)' : src};
 }
 state.litres=0; state.consKm=0;
+// ---------- Serbatoio ----------
+// La cee'd non comunica il livello via OBD: lo si ricava dall'ultimo pieno meno il gasolio misurato dalla centralina.
+const tank={litres:null};
+try{ const t=JSON.parse(localStorage.getItem('cockpit-tank')||'null'); if(t && typeof t.litres==='number') tank.litres=t.litres; }catch(e){}
+function saveTank(){ try{ localStorage.setItem('cockpit-tank',JSON.stringify({litres:tank.litres,at:Date.now()})); }catch(e){} }
+segBar($('bTank'),20);
+$('btnFull').onclick=()=>{ tank.litres=TANK; saveTank(); $('tankNote').textContent='Pieno registrato: '+TANK+' litri. Da ora l\'app scala il gasolio consumato.'; };
+$('btnAddFuel').onclick=()=>{
+  const v=parseFloat(String($('inAddL').value).replace(',','.'));
+  if(!(v>0)){ $('tankNote').textContent='Scrivi quanti litri hai messo, poi premi Aggiungi.'; return; }
+  if(tank.litres==null){ $('tankNote').textContent='La prima volta serve un pieno completo: premi "Ho fatto il pieno" quando il serbatoio è pieno.'; return; }
+  tank.litres=Math.min(TANK,tank.litres+v); saveTank(); $('inAddL').value='';
+  $('tankNote').textContent='Aggiunti '+v.toString().replace('.',',')+' litri.';
+};
+let tankSaveT=0;
 let instSmooth=null;
 let lastT=performance.now();
 setInterval(()=>{
@@ -705,6 +700,7 @@ setInterval(()=>{
   const {lh,src}=fuelLh();
   if(lh!=null){
     state.litres+=lh*dt/3600000; state.consKm+=km;
+    if(polling && tank.litres!=null){ tank.litres=Math.max(0,tank.litres-lh*dt/3600000); if((tankSaveT+=dt)>5000){ tankSaveT=0; saveTank(); } }
     let inst=null;
     if(state.speed>3) inst = lh<0.05 ? 99.9 : Math.min(99.9,state.speed/lh);
     instSmooth = inst==null ? null : (instSmooth==null ? inst : instSmooth+(inst-instSmooth)*0.15);
@@ -715,12 +711,17 @@ setInterval(()=>{
   setBar('bInst', (instSmooth??0)/30, instSmooth!=null && avg!=null && instSmooth<avg*0.6 ? 'low':'');
   $('vAvg').textContent = avg==null ? '--.- km/l' : Math.min(99.9,avg).toFixed(1)+' km/l';
   $('vLit').textContent = state.litres.toFixed(2)+' l';
+  // senza livello dalla centralina il gasolio arriva dal serbatoio stimato (non in demo)
+  if(!demoTimer && !state.fuelObd) state.fuel = tank.litres==null ? null : tank.litres/TANK*100;
   const autonomyKmL = avg!=null && state.consKm>2 ? avg : 20; // prima di 2 km usa una media reale tipica del 1.6 CRDi
   $('vRange').textContent = state.fuel==null ? '--- km' : Math.round(state.fuel/100*TANK*autonomyKmL)+' km';
   $('vSrc').textContent = 'fonte: '+src;
+  const tl = state.fuel==null ? null : state.fuel/100*TANK;
+  $('vTank').textContent = tl==null ? '-- l' : tl.toFixed(1).replace('.',',')+' l';
+  setBar('bTank', tl==null?0:tl/TANK, tl!=null&&tl<6?'low':'');
+  $('vTankRange').textContent = $('vRange').textContent;
   $('vInstMini').textContent = $('vInst').textContent;
   $('vRangeMini').textContent = $('vRange').textContent;
-  $('tTyre').classList.toggle('on', !!state.tyreWarn);
   render();
   publishToCar(avg);
 },100);
@@ -734,7 +735,7 @@ function publishToCar(avg){
       mode, rpm:state.rpm, speed:state.speed, gear:$('gear').textContent,
       coolant:state.coolant, fuel:state.fuel, batt:state.batt,
       inst:instSmooth, avg, range: state.fuel==null?null:Math.round(state.fuel/100*TANK*(avg!=null&&state.consKm>2?avg:20)),
-      trip:state.trip, dtc:state.dtc, tyres:state.tyres, tyreTemps:state.tyreTemps, tyreNote:state.tyreNote
+      trip:state.trip, dtc:state.dtc
     }));
   }catch(e){}
 }
@@ -749,7 +750,7 @@ let demoTimer=null;
 function startDemo(){
   setRunning(true,false); setStatus('Modalità demo: dati simulati','demo');
   let t=0, gear=1, rpm=900, speed=0;
-  Object.assign(state,{coolant:45,fuel:63,load:20,tps:0,batt:14.1,iat:19,dtc:0,maf:null,map:null,fuelRate:null,tyreNote:'Valori simulati della modalità demo'}); resetTrip();
+  Object.assign(state,{coolant:45,fuel:63,load:20,tps:0,batt:14.1,iat:19,dtc:0,maf:null,map:null,fuelRate:null}); resetTrip();
   demoTimer=setInterval(()=>{
     t+=0.1;
     const phase=(t%40);
@@ -771,10 +772,6 @@ function startDemo(){
     state.batt=13.9+Math.sin(t)*0.15;
     // aria aspirata simulata: densità aria × cilindrata × cicli × carico × rendimento volumetrico
     state.maf=1.2*(cfg.disp/1000)*rpm/120*(state.load/100)*0.85;
-    // gomme simulate: si scaldano con la marcia, la posteriore destra è un po' sgonfia
-    const warm=Math.min(0.15,t*0.002);
-    state.tyres=[2.32+warm,2.30+warm,2.28+warm,1.94+warm];
-    state.tyreTemps=[18+warm*100,18+warm*100,17+warm*90,17+warm*90];
   },100);
 }
 function stopDemo(){ clearInterval(demoTimer); demoTimer=null; }
@@ -820,7 +817,7 @@ async function connect(){
       }
       rxChar=p.rx; txChar=p.tx;
       const r=await cmd('ATI',2500);
-      if(/ELM|OBD|V\d|OK|\?/i.test(r)){ log('  risponde: '+r.replace(/\s+/g,' ')); break; }
+      if(/ELM|OBD|V\d|OK|\?/i.test(r)){ log('  risponde: '+r.replace(/\s+/g,' ')); info.elm=(r.match(/ELM327\s*v[\d.]+/i)||[r.replace(/^ATI\s*/i,'')])[0].trim(); break; }
       log('  nessuna risposta'); rxChar=null; txChar=null;
     }
     if(!txChar) throw new Error('l\'adattatore non risponde ai comandi ELM327. Apri "Registro collegamento" e inviamelo.');
@@ -844,10 +841,11 @@ async function connect(){
     log('Protocollo dell\'auto: '+PROTO_NAMES[found]);
     try{ localStorage.setItem('cockpit-proto',found); }catch(e){}
     setRunning(true,true); setStatus('Collegato a '+(dev.name||'adattatore OBD'),'live');
-    Object.assign(state,{maf:null,map:null,fuelRate:null,tyres:[null,null,null,null],tyreTemps:[null,null,null,null],tyreNote:'Cerco la centralina pressione gomme…'}); resetTrip();
-    tyreTries=0; tyreSupported=null;
+    Object.assign(state,{pedalOk:false,maf:null,map:null,fuelRate:null,fuelObd:false}); resetTrip();
+    info.proto=PROTO_NAMES[found];
+    await discoverPids();
+    await readInfo();
     await readDtc(true);
-    await readTyres();
     poll();
   }catch(err){
     setRunning(false,false);
@@ -890,13 +888,132 @@ function bytes(resp,mode,pid){
   const out=[]; for(let j=i+key.length;j+1<hex.length;j+=2) out.push(parseInt(hex.substr(j,2),16));
   return out;
 }
+// ---------- Elenco completo dei dati OBD (modo 01) ----------
+const N=(v,d=0)=>v.toFixed(d).replace('.',',');
+const W=b=>b[0]*256+b[1];
+const OBD_STD={1:'OBD-II (CARB)',2:'OBD (EPA)',3:'OBD e OBD-II',6:'EOBD (Europa)',7:'EOBD e OBD-II',9:'EOBD, OBD e OBD-II',11:'JOBD e OBD-II',13:'JOBD, EOBD e OBD-II',17:'EMD',33:'Euro IV B1',34:'Euro V B2',35:'Euro C'};
+const FUEL_T={1:'Benzina',2:'Metanolo',3:'Etanolo',4:'Gasolio',5:'GPL',6:'Metano',8:'Elettrico'};
+const PID_INFO={
+  '01':['Spia motore e numero errori','',b=>((b[0]&0x80)?'accesa':'spenta')+' · '+(b[0]&0x7f)+' errori'],
+  '04':['Carico motore calcolato','%',b=>N(b[0]*100/255)],
+  '05':['Temperatura liquido refrigerante','°C',b=>N(b[0]-40)],
+  '06':['Correzione carburante breve (banco 1)','%',b=>N((b[0]-128)*100/128,1)],
+  '07':['Correzione carburante lunga (banco 1)','%',b=>N((b[0]-128)*100/128,1)],
+  '0A':['Pressione carburante','kPa',b=>N(b[0]*3)],
+  '0B':['Pressione collettore di aspirazione','kPa',b=>N(b[0])],
+  '0C':['Giri motore','giri/min',b=>N(W(b)/4)],
+  '0D':['Velocità','km/h',b=>N(b[0])],
+  '0E':['Anticipo','°',b=>N(b[0]/2-64,1)],
+  '0F':['Temperatura aria aspirata','°C',b=>N(b[0]-40)],
+  '10':['Portata aria (MAF)','g/s',b=>N(W(b)/100,2)],
+  '11':['Posizione farfalla','%',b=>N(b[0]*100/255)],
+  '13':['Sensori ossigeno presenti','',b=>{ let n=0; for(let i=0;i<8;i++) if(b[0]&(1<<i)) n++; return n+' sensori'; }],
+  '1C':['Standard OBD dell\'auto','',b=>OBD_STD[b[0]]||('codice '+b[0])],
+  '1F':['Tempo dall\'avvio del motore','',b=>{ const t=W(b); return Math.floor(t/60)+' min '+(t%60)+' s'; }],
+  '21':['Km percorsi con spia motore accesa','km',b=>N(W(b))],
+  '22':['Pressione carburante (rispetto al collettore)','kPa',b=>N(W(b)*0.079,1)],
+  '23':['Pressione rail gasolio','bar',b=>N(W(b)*10/100)],
+  '2C':['EGR comandato','%',b=>N(b[0]*100/255)],
+  '2D':['Errore EGR','%',b=>N((b[0]-128)*100/128,1)],
+  '2E':['Spurgo vapori carburante comandato','%',b=>N(b[0]*100/255)],
+  '2F':['Livello carburante','%',b=>N(b[0]*100/255)],
+  '30':['Avviamenti dalla cancellazione errori','',b=>N(b[0])],
+  '31':['Km dalla cancellazione errori','km',b=>N(W(b))],
+  '33':['Pressione atmosferica','kPa',b=>N(b[0])],
+  '3C':['Temperatura catalizzatore (banco 1, sensore 1)','°C',b=>N(W(b)/10-40)],
+  '3D':['Temperatura catalizzatore (banco 2, sensore 1)','°C',b=>N(W(b)/10-40)],
+  '3E':['Temperatura catalizzatore (banco 1, sensore 2)','°C',b=>N(W(b)/10-40)],
+  '42':['Tensione centralina','V',b=>N(W(b)/1000,2)],
+  '43':['Carico assoluto','%',b=>N(W(b)*100/255)],
+  '44':['Rapporto aria/carburante comandato (lambda)','',b=>N(W(b)*2/65536,3)],
+  '45':['Posizione relativa farfalla','%',b=>N(b[0]*100/255)],
+  '46':['Temperatura esterna','°C',b=>N(b[0]-40)],
+  '47':['Posizione assoluta farfalla B','%',b=>N(b[0]*100/255)],
+  '49':['Posizione pedale acceleratore D','%',b=>N(b[0]*100/255)],
+  '4A':['Posizione pedale acceleratore E','%',b=>N(b[0]*100/255)],
+  '4B':['Posizione pedale acceleratore F','%',b=>N(b[0]*100/255)],
+  '4C':['Attuatore farfalla comandato','%',b=>N(b[0]*100/255)],
+  '4D':['Minuti con spia motore accesa','min',b=>N(W(b))],
+  '4E':['Minuti dalla cancellazione errori','min',b=>N(W(b))],
+  '51':['Tipo di carburante','',b=>FUEL_T[b[0]]||('codice '+b[0])],
+  '5A':['Posizione relativa pedale','%',b=>N(b[0]*100/255)],
+  '5C':['Temperatura olio motore','°C',b=>N(b[0]-40)],
+  '5E':['Portata gasolio','l/h',b=>N(W(b)/20,2)],
+  '61':['Coppia richiesta dal guidatore','%',b=>N(b[0]-125)],
+  '62':['Coppia effettiva del motore','%',b=>N(b[0]-125)],
+  '63':['Coppia di riferimento del motore','Nm',b=>N(W(b))],
+  '67':['Temperatura liquido refrigerante (sensore 1)','°C',b=>N(b[1]-40)],
+  '68':['Temperatura aria aspirata (sensore 1)','°C',b=>N(b[1]-40)],
+  '70':['Pressione turbo','bar',b=>N(((b[3]*256+b[4])*0.03125)/100,2)],
+  '7C':['Temperatura filtro antiparticolato (ingresso)','°C',b=>N((b[1]*256+b[2])/10-40)],
+  '84':['Temperatura superficie collettore','°C',b=>N(b[0]-40)],
+  'A6':['Contachilometri','km',b=>N(((b[0]*16777216)+(b[1]*65536)+(b[2]*256)+b[3])/10)],
+};
+const dataVals={}; let supported=[], dataIdx=0;
+const info={vin:null,ecu:null,cal:null,proto:null,elm:null};
+function storeData(pid,b){ dataVals[pid]={b, t:Date.now()}; }
+// i PID supportati sono indicati a gruppi di 32 bit (risposte a 0100, 0120, 0140...)
+async function discoverPids(){
+  supported=[];
+  for(let base=0; base<=0xC0; base+=0x20){
+    const hb=base.toString(16).toUpperCase().padStart(2,'0');
+    const b=bytes(await cmd('01'+hb,3000),'41',hb);
+    if(!b||b.length<4) break;
+    for(let i=0;i<32;i++){
+      const pid=base+i+1;
+      if((b[i>>3]&(0x80>>(i&7))) && pid%0x20!==0) supported.push(pid.toString(16).toUpperCase().padStart(2,'0'));
+    }
+    if(!(b[3]&1)) break;
+  }
+  log('Valori disponibili: '+supported.join(' '));
+}
+// risposta su più frame dell'ELM327 ("0:...", "1:...") → stringa esadecimale unica
+function mergeFrames(r){
+  return r.split(/[\r\n]+/).map(l=>l.trim()).filter(l=>l && !/^[0-9A-F]{3}$/i.test(l))
+    .map(l=>l.replace(/^[0-9A-F]:/i,'')).join('').replace(/[^0-9A-F]/gi,'').toUpperCase();
+}
+// modo 09: telaio, calibrazione, nome centralina (testo ASCII)
+async function readInfo(){
+  const ask=async pid=>{
+    const hex=mergeFrames(await cmd('09'+pid,5000)), i=hex.indexOf('49'+pid);
+    if(i<0) return null;
+    let t=''; for(let j=i+6;j+1<hex.length;j+=2){ const c=parseInt(hex.substr(j,2),16); if(c>=32&&c<127) t+=String.fromCharCode(c); }
+    return t.replace(/\s+/g,' ').trim()||null;
+  };
+  info.vin=await ask('02'); info.cal=await ask('04'); info.ecu=await ask('0A');
+}
+function renderData(){
+  const live = !!polling;
+  const set=(id,v)=>{ $(id).textContent = v||'--'; };
+  set('iVin',info.vin); set('iEcu',info.ecu); set('iCal',info.cal); set('iProto',info.proto); set('iElm',info.elm);
+  set('iCount', supported.length ? supported.length+' parametri' : null);
+  $('dataNote').hidden = live && supported.length>0;
+  const rows = supported.filter(p=>!/^(20|40|60|80|A0|C0)$/.test(p)).map(pid=>{
+    const def=PID_INFO[pid], d=dataVals[pid];
+    const name = def ? def[0] : 'Parametro '+pid;
+    let val, na=false;
+    if(!d){ val='lettura…'; na=true; }
+    else if(d.b===null){ val='nessun dato'; na=true; }
+    else if(def){ try{ val=def[2](d.b)+(def[1]?' '+def[1]:''); }catch(e){ val='--'; na=true; } }
+    else val=d.b.map(x=>x.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    return `<div class="drow"><span>${name}<small>${pid}</small></span><b${na?' class="na"':''}>${val}</b></div>`;
+  }).join('');
+  if($('dataList').innerHTML!==rows) $('dataList').innerHTML=rows;
+}
+setInterval(()=>{ if(currentView==='dati') renderData(); },700);
+async function readDataPid(pid){
+  const r=await cmd('01'+pid);
+  if(/NO DATA|\?/.test(r)){ dataVals[pid]={b:null,t:Date.now()}; return; }
+  const b=bytes(r,'41',pid); if(b&&b.length) storeData(pid,b);
+}
 const PIDS=[
   {pid:'0C',f:b=>state.rpm=(b[0]*256+b[1])/4, fast:true},
   {pid:'0D',f:b=>state.speed=b[0], fast:true},
-  {pid:'11',f:b=>state.tps=b[0]*100/255, fast:true},
+  {pid:'49',f:b=>{ state.tps=b[0]*100/255; state.pedalOk=true; }, fast:true},
+  {pid:'11',f:b=>{ if(!state.pedalOk) state.tps=b[0]*100/255; }, fast:true},
   {pid:'04',f:b=>state.load=b[0]*100/255},
   {pid:'05',f:b=>state.coolant=b[0]-40},
-  {pid:'2F',f:b=>state.fuel=b[0]*100/255},
+  {pid:'2F',f:b=>{ state.fuel=b[0]*100/255; state.fuelObd=true; }},
   {pid:'0F',f:b=>state.iat=b[0]-40},
   {pid:'5E',f:b=>state.fuelRate=(b[0]*256+b[1])/20, fast:true},
   {pid:'10',f:b=>state.maf=(b[0]*256+b[1])/100, fast:true},
@@ -911,13 +1028,16 @@ async function poll(){
       // basta una fonte di consumo: salta quelle meno precise se c'è una migliore
       if(p.pid==='10' && state.fuelRate!=null) continue;
       if(p.pid==='0B' && (state.fuelRate!=null || state.maf!=null)) continue;
+      if(p.pid==='11' && state.pedalOk) continue;
       const r=await cmd('01'+p.pid);
       if(/NO DATA|\?/.test(r)){ unsupported.add(p.pid); continue; }
-      const b=bytes(r,'41',p.pid); if(b&&b.length) p.f(b);
+      const b=bytes(r,'41',p.pid); if(b&&b.length){ p.f(b); storeData(p.pid,b); }
     }
     if(n%10===0){ const v=parseFloat((await cmd('ATRV')).replace(/[^0-9.]/g,'')); if(!isNaN(v)) state.batt=v; }
-    // la pressione cambia lentamente: una lettura ogni ~30 giri di interrogazione
-    if(polling && n%30===0) await readTyres();
+    // con la finestra Dati aperta si leggono anche tutti gli altri valori, quattro per giro
+    if(currentView==='dati' && supported.length){
+      for(let k=0;k<4&&polling;k++) await readDataPid(supported[dataIdx++ % supported.length]);
+    }
     n++;
   }
 }
@@ -953,7 +1073,7 @@ function stopAll(){
   stopDemo(); polling=false;
   if(dev&&dev.gatt.connected) dev.gatt.disconnect();
   dev=null; txChar=null; rxChar=null;
-  Object.assign(state,{rpm:0,speed:0,tps:0}); setRunning(false,false); setStatus('Fermo.');
+  Object.assign(state,{rpm:0,speed:0,tps:0,maf:null,map:null,fuelRate:null,load:null}); setRunning(false,false); setStatus('Fermo.');
 }
 $('btnConnect').onclick=connect;
 $('btnDemo').onclick=startDemo;
@@ -961,9 +1081,11 @@ $('btnStop').onclick=stopAll;
 $('btnDtc').onclick=()=>readDtc(false);
 $('btnClear').onclick=clearDtc;
 // ---------- Finestre ----------
-const VIEWS=['cockpit','consumi','gomme','diagnosi','impostazioni'];
+const VIEWS=['cockpit','consumi','dati','diagnosi','impostazioni'];
+let currentView='cockpit';
 function showView(){
   const name=VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'cockpit';
+  currentView=name; if(name==='dati') renderData();
   VIEWS.forEach(v=>{ $('v-'+v).hidden = v!==name; });
   document.querySelectorAll('.tabs a').forEach(a=>{ if(a.dataset.view===name) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   if(name==='cockpit') gauges.forEach(g=>g.resize());
@@ -974,6 +1096,14 @@ if(!location.hash){ try{ const v=localStorage.getItem('cockpit-view'); if(v&&VIE
 showView();
 let savedSkin='sport'; try{ savedSkin=localStorage.getItem('cockpit-skin')||'sport'; }catch(e){}
 setSkin(savedSkin);
+$('btnCopyData').onclick=()=>{
+  renderData();
+  const head=[['Telaio',info.vin],['Centralina',info.ecu],['Calibrazione',info.cal],['Protocollo',info.proto],['Adattatore',info.elm]].map(([k,v])=>k+': '+(v||'--'));
+  const rows=[...$('dataList').querySelectorAll('.drow')].map(r=>r.querySelector('span').childNodes[0].textContent+' ('+r.querySelector('small').textContent+'): '+r.querySelector('b').textContent);
+  const txt=head.concat(['',...rows]).join('\n');
+  const btn=$('btnCopyData'), done=()=>{ btn.textContent='Copiato'; setTimeout(()=>btn.textContent='Copia elenco',2000); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,()=>{}); 
+};
 $('btnCopyLog').onclick=()=>{
   const txt=logLines.join('\n')||'(registro vuoto)';
   const done=()=>{ $('btnCopyLog').textContent='Copiato'; setTimeout(()=>$('btnCopyLog').textContent='Copia registro',2000); };
